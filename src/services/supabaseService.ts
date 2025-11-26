@@ -39,12 +39,13 @@ export const supabaseService = {
     },
 
     // Create a new post
-    async createPost(content: string, userId: string): Promise<Post | null> {
+    async createPost(content: string, userId: string, imageUrl?: string): Promise<Post | null> {
         const { data, error } = await supabase
             .from('plaza_posts')
             .insert({
                 user_id: userId,
-                content: content
+                content: content,
+                image_url: imageUrl
             })
             .select(`
                 *,
@@ -61,6 +62,28 @@ export const supabaseService = {
         }
 
         return data as Post;
+    },
+
+    // Upload image to storage
+    async uploadImage(file: File): Promise<string | null> {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('post_images')
+            .upload(filePath, file);
+
+        if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+            return null;
+        }
+
+        const { data } = supabase.storage
+            .from('post_images')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
     },
 
     // Fetch job experiences for a user (or all for the village scene if needed)

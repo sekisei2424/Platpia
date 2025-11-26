@@ -48,24 +48,70 @@ export type Database = {
                     user_id: string
                     content: string
                     created_at: string
+                    image_url: string | null
+                    job_id: string | null
                 }
                 Insert: {
                     id?: string
                     user_id: string
                     content: string
                     created_at?: string
+                    image_url?: string | null
+                    job_id?: string | null
                 }
                 Update: {
                     id?: string
                     user_id?: string
                     content?: string
                     created_at?: string
+                    image_url?: string | null
+                    job_id?: string | null
                 }
                 Relationships: [
                     {
                         foreignKeyName: "plaza_posts_user_id_fkey"
                         columns: ["user_id"]
                         referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "plaza_posts_job_id_fkey"
+                        columns: ["job_id"]
+                        referencedRelation: "jobs"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            job_bookmarks: {
+                Row: {
+                    id: string
+                    user_id: string
+                    job_id: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    job_id: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    job_id?: string
+                    created_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "job_bookmarks_user_id_fkey"
+                        columns: ["user_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "job_bookmarks_job_id_fkey"
+                        columns: ["job_id"]
+                        referencedRelation: "jobs"
                         referencedColumns: ["id"]
                     }
                 ]
@@ -76,20 +122,45 @@ export type Database = {
                     title: string
                     status: string | null
                     created_at: string
+                    description: string | null
+                    company_id: string | null
+                    location: string | null
+                    reward: string | null
+                    thumbnail_url: string | null
+                    updated_at: string
                 }
                 Insert: {
                     id?: string
                     title: string
                     status?: string | null
                     created_at?: string
+                    description?: string | null
+                    company_id?: string | null
+                    location?: string | null
+                    reward?: string | null
+                    thumbnail_url?: string | null
+                    updated_at?: string
                 }
                 Update: {
                     id?: string
                     title?: string
                     status?: string | null
                     created_at?: string
+                    description?: string | null
+                    company_id?: string | null
+                    location?: string | null
+                    reward?: string | null
+                    thumbnail_url?: string | null
+                    updated_at?: string
                 }
-                Relationships: []
+                Relationships: [
+                    {
+                        foreignKeyName: "jobs_company_id_fkey"
+                        columns: ["company_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
             }
             job_experiences: {
                 Row: {
