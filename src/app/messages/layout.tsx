@@ -30,14 +30,14 @@ export default function MessagesLayout({
     };
 
     return (
-        <div className="flex h-screen">
+        <div className="flex h-screen flex-col md:flex-row">
             {/* Main Sidebar (Navigation) */}
             <div className="flex-shrink-0 z-20">
                 <Sidebar onPostClick={() => { }} />
             </div>
 
             {/* Messages Sidebar (Conversation List) */}
-            <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+            <div className="w-full md:w-80 bg-white border-r border-gray-200 flex flex-col h-[30vh] md:h-full">
                 <div className="p-4 border-b border-gray-200">
                     <h1 className="text-xl font-bold text-gray-800">Messages</h1>
                 </div>
@@ -68,13 +68,25 @@ export default function MessagesLayout({
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="font-bold text-gray-900 truncate">
-                                                {convo.other_user?.username || 'Unknown User'}
-                                            </p>
-                                            <p className="text-sm text-gray-500 truncate">
-                                                Click to chat
-                                            </p>
+                                        <div className="min-w-0 flex-grow">
+                                            <div className="flex justify-between items-baseline">
+                                                <p className="font-bold text-gray-900 truncate">
+                                                    {convo.other_user?.username || 'Unknown User'}
+                                                </p>
+                                                {convo.last_message && (
+                                                    <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                                                        {new Date(convo.last_message.created_at).toLocaleDateString()}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <p className={`text-sm truncate ${convo.is_unread ? 'text-gray-900 font-bold' : 'text-gray-500'}`}>
+                                                    {convo.last_message?.content || 'No messages yet'}
+                                                </p>
+                                                {convo.is_unread && (
+                                                    <div className="w-2.5 h-2.5 bg-red-500 rounded-full flex-shrink-0 ml-2"></div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </Link>
@@ -85,7 +97,7 @@ export default function MessagesLayout({
             </div>
 
             {/* Chat Area */}
-            <div className="flex-grow bg-gray-50">
+            <div className="flex-grow bg-gray-50 pb-16 md:pb-0 h-[70vh] md:h-auto overflow-hidden">
                 {children}
             </div>
         </div>

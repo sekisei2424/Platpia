@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import { supabaseService } from '@/services/supabaseService';
+import { supabase } from '@/lib/supabase/client';
 
 export class VillageScene extends Scene {
     private player!: Phaser.Physics.Arcade.Sprite;
@@ -31,6 +32,11 @@ export class VillageScene extends Scene {
                 this.load.svg(avatar.key, avatar.path);
             }
         });
+
+        // Load new pixel art avatar
+        if (!this.textures.exists('20251210_dotto.png')) {
+            this.load.image('20251210_dotto.png', '/images/20251210_dotto.png');
+        }
     }
 
     create() {
@@ -59,11 +65,8 @@ export class VillageScene extends Scene {
         // For now, use a default or random one. Ideally fetch from user profile.
         // We can try to get the user from localStorage or just random for now since we are client-side.
         // In a real app, we'd pass the user data to the scene init.
-        const avatarKey = 'avatar1';
-        this.player = this.physics.add.sprite(width / 2, height / 2, avatarKey);
-        this.player.setScale(0.15);
-        this.player.setCollideWorldBounds(true);
-
+        this.initializePlayer(width, height);
+        
         // 4. Input Handling
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             // Move to clicked position (unless clicking a house, which is handled by house interaction)
@@ -71,6 +74,61 @@ export class VillageScene extends Scene {
             // So we'll handle movement in the house click handler or here if just walking.
             this.moveTo(pointer.x, pointer.y);
         });
+    }
+
+    private async initializePlayer(width: number, height: number) {
+        const { data: { user } } = await supabase.auth.getUser();
+        let avatarKey = 'avatar1';
+        
+        if (user) {
+            const profile = await supabaseService.fetchProfile(user.id);
+            if (profile) {
+                const info = this.getAvatarInfo(profile.avatar_type);
+                avatarKey = info.key;
+            }
+        }
+
+        this.player = this.physics.add.sprite(width / 2, height / 2, avatarKey);
+        
+        if (avatarKey === '20251210_dotto.png') {
+            this.player.setDisplaySize(80, 80);
+            this.player.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+        } else {
+            this.player.setScale(0.15);
+        }
+        
+        this.player.setCollideWorldBounds(true);
+    }
+
+    private getAvatarInfo(avatarType: string | null | undefined): { key: string, path: string } {
+        if (!avatarType) {
+             return { key: 'avatar4', path: '/images/character_murabito_young_man_blue.svg' };
+        }
+
+        if (avatarType === '20251210_dotto.png' || avatarType === 'dotto') {
+             return { key: '20251210_dotto.png', path: '/images/20251210_dotto.png' };
+        }
+
+        if (avatarType === 'avatar1' || avatarType === 'character_murabito_middle_man_blue.svg') 
+            return { key: 'avatar1', path: '/images/character_murabito_middle_man_blue.svg' };
+            
+        if (avatarType === 'avatar2' || avatarType === 'character_murabito_middle_woman_blue.svg') 
+            return { key: 'avatar2', path: '/images/character_murabito_middle_woman_blue.svg' };
+            
+        if (avatarType === 'avatar3' || avatarType === 'character_murabito_senior_man_blue.svg') 
+            return { key: 'avatar3', path: '/images/character_murabito_senior_man_blue.svg' };
+            
+        if (avatarType === 'avatar4' || avatarType === 'character_murabito_young_man_blue.svg') 
+            return { key: 'avatar4', path: '/images/character_murabito_young_man_blue.svg' };
+
+        if (avatarType.includes('woman')) return { key: 'avatar2', path: '/images/character_murabito_middle_woman_blue.svg' };
+        if (avatarType.includes('senior')) return { key: 'avatar3', path: '/images/character_murabito_senior_man_blue.svg' };
+        
+        if (avatarType.match(/\.(png|svg|jpg|jpeg)$/i)) {
+            return { key: avatarType, path: `/images/${avatarType}` };
+        }
+
+        return { key: 'avatar4', path: '/images/character_murabito_young_man_blue.svg' };
     }
 
     private createHouse(x: number, y: number, color: number, label: string, url: string) {

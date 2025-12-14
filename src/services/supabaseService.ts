@@ -5,13 +5,17 @@ export type Post = Database['public']['Tables']['plaza_posts']['Row'] & {
     profiles: {
         username: string | null;
         avatar_type: string | null;
+        user_type: 'individual' | 'company' | null;
+    } | null;
+    jobs: {
+        title: string;
     } | null;
 };
 
-export type JobExperience = Database['public']['Tables']['job_experiences']['Row'] & {
+export type JobApplication = Database['public']['Tables']['job_applications']['Row'] & {
     jobs: {
         title: string;
-        status: string | null;
+        status: 'open' | 'closed' | 'draft';
     } | null;
 };
 
@@ -24,7 +28,11 @@ export const supabaseService = {
                 *,
                 profiles (
                     username,
-                    avatar_type
+                    avatar_type,
+                    user_type
+                ),
+                jobs (
+                    title
                 )
             `)
             .order('created_at', { ascending: false })
@@ -39,19 +47,23 @@ export const supabaseService = {
     },
 
     // Create a new post
-    async createPost(content: string, userId: string, imageUrl?: string): Promise<Post | null> {
+    async createPost(content: string, userId: string, imageUrl?: string, jobId?: string): Promise<Post | null> {
         const { data, error } = await supabase
             .from('plaza_posts')
             .insert({
                 user_id: userId,
                 content: content,
-                image_url: imageUrl
+                image_url: imageUrl,
+                job_id: jobId
             })
             .select(`
                 *,
                 profiles (
                     username,
                     avatar_type
+                ),
+                jobs (
+                    title
                 )
             `)
             .single();
@@ -86,13 +98,10 @@ export const supabaseService = {
         return data.publicUrl;
     },
 
-    // Fetch job experiences for a user (or all for the village scene if needed)
-    // For VillageScene, we might want to show "my" experiences or "all" experiences.
-    // Let's assume for now we want to show the current user's experiences or just recent ones.
-    // Based on the requirement "VillageScene to display experience data", let's fetch all for now to populate the village.
-    async fetchJobExperiences(): Promise<JobExperience[]> {
+    // Fetch completed job applications (experiences) for a user
+    async fetchJobExperiences(): Promise<JobApplication[]> {
         const { data, error } = await supabase
-            .from('job_experiences')
+            .from('job_applications')
             .select(`
                 *,
                 jobs (
@@ -100,6 +109,7 @@ export const supabaseService = {
                     status
                 )
             `)
+            .eq('status', 'completed')
             .order('completed_at', { ascending: false })
             .limit(20);
 
@@ -108,8 +118,188 @@ export const supabaseService = {
             return [];
         }
 
-        return data as JobExperience[];
+        return data as JobApplication[];
     },
+
+    // Fetch unposted completed jobs for a user
+    async fetchUnpostedCompletedJobs(userId: string): Promise<JobApplication[]> {
+        // Get all completed applications
+        const { data: completedApps, error } = await supabase
+            .from('job_applications')
+            .select(`
+                *,
+                jobs (
+                    title,
+                    status
+                )
+            `)
+            .eq('applicant_id', userId)
+            .eq('status', 'completed')
+            .order('completed_at', { ascending: false });
+        
+        if (error || !completedApps) return [];
+
+        // Get all posts by this user that have a job_id
+        const { data: posts } = await supabase
+            .from('plaza_posts')
+            .select('job_id')
+            .eq('user_id', userId)
+            .not('job_id', 'is', null);
+        
+        const postedJobIds = posts ? posts.map(p => p.job_id) : [];
+
+        // Filter out already posted jobs
+        return completedApps.filter(app => !postedJobIds.includes(app.job_id)) as JobApplication[];
+    },
+
+    // Check if user has applied for a job
+    async fetchUserApplication(jobId: string, userId: string) {
+        const { data, error } = await supabase
+            .from('job_applications')
+            .select('*')
+            .eq('job_id', jobId)
+            .eq('applicant_id', userId)
+            .single();
+        
+        if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+            console.error("Error fetching application:", error);
+            return null;
+        }
+        return data;
+    },
+
+    // Apply for a job
+    async applyForJob(jobId: string, applicantId: string) {
+        // Check for existing application
+        const { data: existingApp } = await supabase
+            .from('job_applications')
+            .select('status')
+            .eq('job_id', jobId)
+            .eq('applicant_id', applicantId)
+            .single();
+
+        if (existingApp) {
+            if (existingApp.status === 'rejected') {
+                // Re-apply: Update status to pending
+                const { data, error } = await supabase
+                    .from('job_applications')
+                    .update({ 
+                        status: 'pending',
+                        applied_at: new Date().toISOString()
+                    })
+                    .eq('job_id', jobId)
+                    .eq('applicant_id', applicantId)
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                return data;
+            } else {
+                throw new Error('Already applied');
+            }
+        }
+
+        // New application
+        const { data, error } = await supabase
+            .from('job_applications')
+            .insert({
+                job_id: jobId,
+                applicant_id: applicantId,
+                status: 'pending'
+            })
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data;
+    },
+
+    // Fetch active jobs for a company
+    async fetchCompanyJobs(companyId: string) {
+        const { data, error } = await supabase
+            .from('jobs')
+            .select('*')
+            .eq('company_id', companyId)
+            .eq('status', 'open')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Fetch a single job by ID
+    async fetchJob(jobId: string) {
+        const { data, error } = await supabase
+            .from('jobs')
+            .select('*')
+            .eq('id', jobId)
+            .single();
+        
+        if (error) throw error;
+        return data;
+    },
+
+    // Create a new job
+    async createJob(jobData: {
+        company_id: string;
+        title: string;
+        description: string;
+        location: string;
+        reward: string;
+        thumbnail_url?: string;
+    }) {
+        const { data, error } = await supabase
+            .from('jobs')
+            .insert({
+                ...jobData,
+                status: 'open'
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Fetch applicants for a specific job
+    async fetchJobApplicants(jobId: string) {
+        const { data, error } = await supabase
+            .from('job_applications')
+            .select(`
+                *,
+                profiles:applicant_id (
+                    id,
+                    username,
+                    avatar_type,
+                    bio
+                )
+            `)
+            .eq('job_id', jobId)
+            .order('applied_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Update application status
+    async updateApplicationStatus(applicationId: string, status: 'approved' | 'rejected' | 'completed' | 'cancelled') {
+        const updates: any = { status, updated_at: new Date().toISOString() };
+        
+        if (status === 'completed') {
+            updates.completed_at = new Date().toISOString();
+        }
+
+        const { data, error } = await supabase
+            .from('job_applications')
+            .update(updates)
+            .eq('id', applicationId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
     // Fetch user profile
     async fetchProfile(userId: string) {
         const { data, error } = await supabase
@@ -169,12 +359,36 @@ export const supabaseService = {
         // 3. Fetch latest messages for these conversations
         // We can do this by fetching messages ordered by created_at desc
         // Ideally we'd use a view or a lateral join, but let's do a simple query for now.
-        // Or we can just return the participants and let the UI fetch the last message or just show the user.
+        
+        // Fetch latest message for each conversation
+        const { data: latestMessages } = await supabase
+            .from('messages')
+            .select('conversation_id, content, created_at, sender_id')
+            .in('conversation_id', conversationIds)
+            .order('created_at', { ascending: false });
 
-        return participants.map(p => ({
-            conversation_id: p.conversation_id,
-            other_user: p.profiles
-        }));
+        // Fetch unread status (last_read_at)
+        const { data: myParticipation } = await supabase
+            .from('conversation_participants')
+            .select('conversation_id, last_read_at')
+            .eq('user_id', userId)
+            .in('conversation_id', conversationIds);
+
+        return participants.map(p => {
+            const lastMsg = latestMessages?.find(m => m.conversation_id === p.conversation_id); // Since ordered by desc, find returns the first (latest)
+            // Note: .find() on a large array is O(N), but for MVP with few messages it's fine. 
+            // Ideally we'd use a map or a better query.
+            
+            const myPart = myParticipation?.find(mp => mp.conversation_id === p.conversation_id);
+            const isUnread = lastMsg && myPart ? new Date(lastMsg.created_at) > new Date(myPart.last_read_at) : false;
+
+            return {
+                conversation_id: p.conversation_id,
+                other_user: p.profiles,
+                last_message: lastMsg,
+                is_unread: isUnread
+            };
+        });
     },
 
     async fetchMessages(conversationId: string) {
@@ -191,7 +405,7 @@ export const supabaseService = {
         return data;
     },
 
-    async sendMessage(conversationId: string, senderId: string, content: string, type: 'text' | 'booking_request' = 'text') {
+    async sendMessage(conversationId: string, senderId: string, content: string, type: 'text' | 'booking_request' | 'system' = 'text') {
         const { data, error } = await supabase
             .from('messages')
             .insert({
@@ -200,11 +414,10 @@ export const supabaseService = {
                 content: content,
                 message_type: type
             })
-            .select()
-            .single();
+            .select();
 
         if (error) throw error;
-        return data;
+        return data?.[0];
     },
 
     async getUnreadCount() {
@@ -232,5 +445,57 @@ export const supabaseService = {
         if (error) throw error;
 
         return { id: convoId };
-    }
+    },
+
+    // Check if user can post (Company: always, Individual: only if has unposted completed job)
+    async canUserPost(userId: string): Promise<boolean> {
+        // 1. Get user profile to check type
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('user_type')
+            .eq('id', userId)
+            .single();
+        
+        if (!profile) return false;
+        if (profile.user_type === 'company') return true;
+
+        // 2. If individual, check for completed jobs that haven't been posted
+        // Get all completed applications
+        const { data: completedApps } = await supabase
+            .from('job_applications')
+            .select('job_id')
+            .eq('applicant_id', userId)
+            .eq('status', 'completed');
+        
+        if (!completedApps || completedApps.length === 0) return false;
+
+        const completedJobIds = completedApps.map(app => app.job_id);
+
+        // Get all posts by this user that have a job_id
+        const { data: posts } = await supabase
+            .from('plaza_posts')
+            .select('job_id')
+            .eq('user_id', userId)
+            .not('job_id', 'is', null);
+        
+        const postedJobIds = posts ? posts.map(p => p.job_id) : [];
+
+        // Check if there is any completed job that is NOT in posted jobs
+        const hasUnpostedJob = completedJobIds.some(id => !postedJobIds.includes(id));
+
+        return hasUnpostedJob;
+    },
+
+    // Update profile
+    async updateProfile(userId: string, updates: { username?: string; bio?: string; avatar_type?: string }) {
+        const { data, error } = await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('id', userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
 };

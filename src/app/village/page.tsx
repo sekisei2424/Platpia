@@ -12,14 +12,14 @@ export default function VillagePage() {
     const [isPostFormOpen, setIsPostFormOpen] = useState(false);
 
     return (
-        <main className="flex w-full h-screen bg-village-base overflow-hidden">
+        <main className="flex w-full h-screen bg-village-base overflow-hidden flex-col md:flex-row">
             {/* Sidebar Layer */}
             <div className="flex-shrink-0 z-20">
                 <Sidebar onPostClick={() => setIsPostFormOpen(true)} />
             </div>
 
             {/* Game Layer */}
-            <div className="flex-grow relative z-0">
+            <div className="flex-grow relative z-0 pb-16 md:pb-0">
                 <PhaserGame
                     currentScene="village"
                     onOpenJobBoard={() => setIsJobBoardOpen(true)}

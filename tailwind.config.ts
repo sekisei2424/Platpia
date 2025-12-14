@@ -12,8 +12,8 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         village: {
-          base: "#1E1E21",
-          accent: "#238126",
+          base: "#2C2A25", // Warmer dark grey/brown
+          accent: "#4CAF50", // Brighter green
         },
       },
     },

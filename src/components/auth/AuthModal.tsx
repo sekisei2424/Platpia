@@ -68,13 +68,18 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
     };
 
+    if (!isOpen) return null;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="relative w-full max-w-md bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+            <div 
+                className="relative w-full max-w-md bg-[#FDFBF7] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200"
+                onClick={e => e.stopPropagation()}
+            >
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                    className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors z-10 hover:bg-gray-100 rounded-full"
                 >
                     <X size={20} />
                 </button>
@@ -84,7 +89,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                             {isSignUp ? 'Create Account' : 'Welcome Back'}
                         </h2>
-                        <p className="text-gray-600 dark:text-gray-300 mt-2">
+                        <p className="text-gray-600 mt-2">
                             {isSignUp ? 'Join the community today' : 'Sign in to continue'}
                         </p>
                     </div>
@@ -97,8 +102,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     type="button"
                                     onClick={() => setUserType('individual')}
                                     className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${userType === 'individual'
-                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                        ? 'border-blue-500 bg-blue-50 text-blue-600'
+                                        : 'border-gray-200 hover:border-gray-300'
                                         }`}
                                 >
                                     <User size={24} className="mb-2" />
@@ -108,8 +113,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     type="button"
                                     onClick={() => setUserType('company')}
                                     className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${userType === 'company'
-                                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                        ? 'border-purple-500 bg-purple-50 text-purple-600'
+                                        : 'border-gray-200 hover:border-gray-300'
                                         }`}
                                 >
                                     <Building size={24} className="mb-2" />
@@ -121,7 +126,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         {/* Username Input (Only for Sign Up) */}
                         {isSignUp && (
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label className="text-sm font-medium text-gray-700">
                                     Username
                                 </label>
                                 <div className="relative">
@@ -131,7 +136,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                         required
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-900/50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         placeholder="Your Name"
                                         minLength={2}
                                     />
@@ -141,7 +146,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                         {/* Email Input */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <label className="text-sm font-medium text-gray-700">
                                 Email Address
                             </label>
                             <div className="relative">
@@ -151,7 +156,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-900/50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     placeholder="name@example.com"
                                 />
                             </div>
@@ -159,7 +164,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                         {/* Password Input */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <label className="text-sm font-medium text-gray-700">
                                 Password
                             </label>
                             <div className="relative">
@@ -169,7 +174,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-900/50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     placeholder="••••••••"
                                     minLength={6}
                                 />
@@ -188,7 +193,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <div className="mt-6 text-center">
                         <button
                             onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline decoration-dotted"
+                            className="text-sm text-gray-500 hover:text-gray-700 underline decoration-dotted"
                         >
                             {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
                         </button>

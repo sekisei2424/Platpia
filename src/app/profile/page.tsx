@@ -15,16 +15,32 @@ export default function ProfilePage() {
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState({ username: '', bio: '' });
+
     useEffect(() => {
         const loadProfile = async () => {
             if (user) {
                 const data = await supabaseService.fetchProfile(user.id);
                 setProfile(data);
+                setEditForm({ username: data?.username || '', bio: data?.bio || '' });
             }
             setLoading(false);
         };
         loadProfile();
     }, [user]);
+
+    const handleSave = async () => {
+        if (!user) return;
+        try {
+            const updated = await supabaseService.updateProfile(user.id, editForm);
+            setProfile(updated);
+            setIsEditing(false);
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            alert('Failed to update profile');
+        }
+    };
 
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
@@ -60,14 +76,14 @@ export default function ProfilePage() {
     }
 
     return (
-        <main className="flex w-full h-screen bg-village-base overflow-hidden">
+        <main className="flex w-full h-screen bg-village-base overflow-hidden flex-col md:flex-row">
             {/* Sidebar Layer */}
             <div className="flex-shrink-0 z-20">
                 <Sidebar onPostClick={() => setIsPostFormOpen(true)} />
             </div>
 
             {/* Content Layer */}
-            <div className="flex-grow relative z-0 overflow-y-auto bg-gray-50">
+            <div className="flex-grow relative z-0 overflow-y-auto bg-gray-50 pb-20 md:pb-0">
                 {/* Header / Cover */}
                 <div className="h-64 bg-gradient-to-r from-village-accent to-green-400 relative">
                     <div className="absolute -bottom-16 left-8">
@@ -81,19 +97,66 @@ export default function ProfilePage() {
 
                 <div className="pt-20 px-8 pb-8 max-w-5xl mx-auto">
                     <div className="flex justify-between items-start mb-8">
-                        <div>
-                            <h1 className="text-4xl font-bold text-gray-800">{profile?.username || 'Anonymous'}</h1>
-                            <p className="text-gray-500 text-lg">@{profile?.id?.substring(0, 8)}</p>
-                            <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${profile?.user_type === 'company'
-                                ? 'bg-purple-100 text-purple-800'
-                                : 'bg-blue-100 text-blue-800'
-                                }`}>
-                                {profile?.user_type === 'company' ? 'Company' : 'Individual'}
-                            </span>
+                        <div className="flex-grow">
+                            {isEditing ? (
+                                <div className="space-y-4 max-w-md">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Username</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.username}
+                                            onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-village-accent focus:ring-village-accent sm:text-sm p-2 border text-gray-900 bg-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Bio</label>
+                                        <textarea
+                                            value={editForm.bio}
+                                            onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                                            rows={3}
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-village-accent focus:ring-village-accent sm:text-sm p-2 border text-gray-900 bg-white"
+                                        />
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={handleSave}
+                                            className="px-4 py-2 bg-village-accent text-white rounded-md hover:bg-green-700"
+                                        >
+                                            Save
+                                        </button>
+                                        <button
+                                            onClick={() => setIsEditing(false)}
+                                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <h1 className="text-4xl font-bold text-gray-800">{profile?.username || 'Anonymous'}</h1>
+                                    <p className="text-gray-500 text-lg">@{profile?.id?.substring(0, 8)}</p>
+                                    <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${profile?.user_type === 'company'
+                                        ? 'bg-purple-100 text-purple-800'
+                                        : 'bg-blue-100 text-blue-800'
+                                        }`}>
+                                        {profile?.user_type === 'company' ? 'Company' : 'Individual'}
+                                    </span>
+                                    {profile?.bio && (
+                                        <p className="mt-4 text-gray-700 whitespace-pre-wrap">{profile.bio}</p>
+                                    )}
+                                </>
+                            )}
                         </div>
-                        <button className="px-6 py-2 border-2 border-gray-300 rounded-full font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-                            Edit Profile
-                        </button>
+                        {!isEditing && (
+                            <button 
+                                onClick={() => setIsEditing(true)}
+                                className="px-6 py-2 border-2 border-gray-300 rounded-full font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                            >
+                                Edit Profile
+                            </button>
+                        )}
                     </div>
 
                     <div className="flex gap-6 mb-8 text-gray-600">

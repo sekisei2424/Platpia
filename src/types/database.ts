@@ -15,8 +15,7 @@ export type Database = {
                     username: string | null
                     user_type: 'individual' | 'company'
                     avatar_type: string | null
-                    current_location_x: number | null
-                    current_location_y: number | null
+                    bio: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -25,8 +24,7 @@ export type Database = {
                     username?: string | null
                     user_type?: 'individual' | 'company'
                     avatar_type?: string | null
-                    current_location_x?: number | null
-                    current_location_y?: number | null
+                    bio?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -35,37 +33,125 @@ export type Database = {
                     username?: string | null
                     user_type?: 'individual' | 'company'
                     avatar_type?: string | null
-                    current_location_x?: number | null
-                    current_location_y?: number | null
+                    bio?: string | null
                     created_at?: string
                     updated_at?: string
                 }
                 Relationships: []
             }
+            jobs: {
+                Row: {
+                    id: string
+                    company_id: string
+                    title: string
+                    description: string | null
+                    location: string | null
+                    reward: string | null
+                    thumbnail_url: string | null
+                    status: 'open' | 'closed' | 'draft'
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    company_id: string
+                    title: string
+                    description?: string | null
+                    location?: string | null
+                    reward?: string | null
+                    thumbnail_url?: string | null
+                    status?: 'open' | 'closed' | 'draft'
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    company_id?: string
+                    title?: string
+                    description?: string | null
+                    location?: string | null
+                    reward?: string | null
+                    thumbnail_url?: string | null
+                    status?: 'open' | 'closed' | 'draft'
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "jobs_company_id_fkey"
+                        columns: ["company_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            job_applications: {
+                Row: {
+                    id: string
+                    job_id: string
+                    applicant_id: string
+                    status: 'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled'
+                    applied_at: string
+                    completed_at: string | null
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    job_id: string
+                    applicant_id: string
+                    status?: 'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled'
+                    applied_at?: string
+                    completed_at?: string | null
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    job_id?: string
+                    applicant_id?: string
+                    status?: 'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled'
+                    applied_at?: string
+                    completed_at?: string | null
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "job_applications_job_id_fkey"
+                        columns: ["job_id"]
+                        referencedRelation: "jobs"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "job_applications_applicant_id_fkey"
+                        columns: ["applicant_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
             plaza_posts: {
                 Row: {
                     id: string
                     user_id: string
-                    content: string
-                    created_at: string
-                    image_url: string | null
                     job_id: string | null
+                    content: string
+                    image_url: string | null
+                    created_at: string
                 }
                 Insert: {
                     id?: string
                     user_id: string
-                    content: string
-                    created_at?: string
-                    image_url?: string | null
                     job_id?: string | null
+                    content: string
+                    image_url?: string | null
+                    created_at?: string
                 }
                 Update: {
                     id?: string
                     user_id?: string
-                    content?: string
-                    created_at?: string
-                    image_url?: string | null
                     job_id?: string | null
+                    content?: string
+                    image_url?: string | null
+                    created_at?: string
                 }
                 Relationships: [
                     {
@@ -112,86 +198,6 @@ export type Database = {
                         foreignKeyName: "job_bookmarks_job_id_fkey"
                         columns: ["job_id"]
                         referencedRelation: "jobs"
-                        referencedColumns: ["id"]
-                    }
-                ]
-            }
-            jobs: {
-                Row: {
-                    id: string
-                    title: string
-                    status: string | null
-                    created_at: string
-                    description: string | null
-                    company_id: string | null
-                    location: string | null
-                    reward: string | null
-                    thumbnail_url: string | null
-                    updated_at: string
-                }
-                Insert: {
-                    id?: string
-                    title: string
-                    status?: string | null
-                    created_at?: string
-                    description?: string | null
-                    company_id?: string | null
-                    location?: string | null
-                    reward?: string | null
-                    thumbnail_url?: string | null
-                    updated_at?: string
-                }
-                Update: {
-                    id?: string
-                    title?: string
-                    status?: string | null
-                    created_at?: string
-                    description?: string | null
-                    company_id?: string | null
-                    location?: string | null
-                    reward?: string | null
-                    thumbnail_url?: string | null
-                    updated_at?: string
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "jobs_company_id_fkey"
-                        columns: ["company_id"]
-                        referencedRelation: "profiles"
-                        referencedColumns: ["id"]
-                    }
-                ]
-            }
-            job_experiences: {
-                Row: {
-                    id: string
-                    user_id: string
-                    job_id: string
-                    completed_at: string
-                }
-                Insert: {
-                    id?: string
-                    user_id: string
-                    job_id: string
-                    completed_at?: string
-                }
-                Update: {
-                    id?: string
-                    user_id?: string
-                    job_id?: string
-                    completed_at?: string
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "job_experiences_job_id_fkey"
-                        columns: ["job_id"]
-                        referencedRelation: "jobs"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "job_experiences_user_id_fkey"
-                        columns: ["user_id"]
-                        referencedRelation: "profiles"
                         referencedColumns: ["id"]
                     }
                 ]
@@ -254,7 +260,7 @@ export type Database = {
                     conversation_id: string
                     sender_id: string
                     content: string
-                    message_type: 'text' | 'booking_request' | 'system'
+                    message_type: 'text' | 'booking_request' | 'system' | 'image'
                     created_at: string
                 }
                 Insert: {
@@ -262,7 +268,7 @@ export type Database = {
                     conversation_id: string
                     sender_id: string
                     content: string
-                    message_type?: 'text' | 'booking_request' | 'system'
+                    message_type?: 'text' | 'booking_request' | 'system' | 'image'
                     created_at?: string
                 }
                 Update: {
@@ -270,7 +276,7 @@ export type Database = {
                     conversation_id?: string
                     sender_id?: string
                     content?: string
-                    message_type?: 'text' | 'booking_request' | 'system'
+                    message_type?: 'text' | 'booking_request' | 'system' | 'image'
                     created_at?: string
                 }
                 Relationships: [
@@ -288,58 +294,6 @@ export type Database = {
                     }
                 ]
             }
-            bookings: {
-                Row: {
-                    id: string
-                    post_id: string | null
-                    requester_id: string
-                    provider_id: string
-                    status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled'
-                    scheduled_at: string | null
-                    created_at: string
-                    updated_at: string
-                }
-                Insert: {
-                    id?: string
-                    post_id?: string | null
-                    requester_id: string
-                    provider_id: string
-                    status?: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled'
-                    scheduled_at?: string | null
-                    created_at?: string
-                    updated_at?: string
-                }
-                Update: {
-                    id?: string
-                    post_id?: string | null
-                    requester_id?: string
-                    provider_id?: string
-                    status?: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled'
-                    scheduled_at?: string | null
-                    created_at?: string
-                    updated_at?: string
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "bookings_post_id_fkey"
-                        columns: ["post_id"]
-                        referencedRelation: "plaza_posts"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "bookings_requester_id_fkey"
-                        columns: ["requester_id"]
-                        referencedRelation: "profiles"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "bookings_provider_id_fkey"
-                        columns: ["provider_id"]
-                        referencedRelation: "profiles"
-                        referencedColumns: ["id"]
-                    }
-                ]
-            }
         }
         Views: {
             [_ in never]: never
@@ -350,6 +304,10 @@ export type Database = {
                     other_user_id: string
                 }
                 Returns: string
+            }
+            get_unread_count: {
+                Args: Record<string, never>
+                Returns: number
             }
         }
         Enums: {

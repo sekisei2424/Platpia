@@ -5,21 +5,25 @@ import { useEffect, useRef } from 'react';
 export default function PhaserGame({
     currentScene,
     onOpenJobBoard,
-    onOpenPost
+    onOpenPost,
+    onPostsLoaded
 }: {
     currentScene: 'plaza' | 'village';
     onOpenJobBoard: () => void;
     onOpenPost: (post: any) => void;
+    onPostsLoaded?: (posts: any[]) => void;
 }) {
     const gameRef = useRef<Phaser.Game | null>(null);
     const onOpenJobBoardRef = useRef(onOpenJobBoard);
     const onOpenPostRef = useRef(onOpenPost);
+    const onPostsLoadedRef = useRef(onPostsLoaded);
 
     // Update refs when props change
     useEffect(() => {
         onOpenJobBoardRef.current = onOpenJobBoard;
         onOpenPostRef.current = onOpenPost;
-    }, [onOpenJobBoard, onOpenPost]);
+        onPostsLoadedRef.current = onPostsLoaded;
+    }, [onOpenJobBoard, onOpenPost, onPostsLoaded]);
 
     // Initialize Game
     useEffect(() => {
@@ -85,6 +89,10 @@ export default function PhaserGame({
 
                 game.events.on('open_post', (post: any) => {
                     if (onOpenPostRef.current) onOpenPostRef.current(post);
+                });
+
+                game.events.on('posts_loaded', (posts: any[]) => {
+                    if (onPostsLoadedRef.current) onPostsLoadedRef.current(posts);
                 });
             };
 

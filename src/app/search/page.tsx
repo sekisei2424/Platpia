@@ -12,14 +12,14 @@ export default function SearchPage() {
     const [searchQuery, setSearchQuery] = useState('');
 
     return (
-        <main className="flex w-full h-screen bg-village-base overflow-hidden">
+        <main className="flex w-full h-screen bg-village-base overflow-hidden flex-col md:flex-row">
             {/* Sidebar Layer */}
             <div className="flex-shrink-0 z-20">
                 <Sidebar onPostClick={() => setIsPostFormOpen(true)} />
             </div>
 
             {/* Content Layer */}
-            <div className="flex-grow relative z-0 overflow-y-auto bg-gray-50">
+            <div className="flex-grow relative z-0 overflow-y-auto bg-gray-50 pb-20 md:pb-0">
                 <div className="max-w-4xl mx-auto p-8">
                     <h1 className="text-3xl font-bold text-gray-800 mb-8">村を探索</h1>
 
@@ -30,7 +30,7 @@ export default function SearchPage() {
                             placeholder="人、仕事、投稿を検索..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full p-4 pl-12 rounded-2xl border-none shadow-lg bg-white text-lg focus:ring-2 focus:ring-village-accent outline-none transition-all"
+                            className="w-full p-4 pl-12 rounded-2xl border-none shadow-lg bg-white text-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-village-accent outline-none transition-all"
                         />
                         <SearchIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={24} />
                     </div>

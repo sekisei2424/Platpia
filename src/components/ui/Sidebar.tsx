@@ -16,6 +16,7 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
     const { user, signOut } = useAuth();
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [canPost, setCanPost] = useState(false);
 
     const isPlaza = pathname === '/' || pathname === '/plaza';
     const isVillage = pathname === '/village';
@@ -26,18 +27,26 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
     useEffect(() => {
         if (user) {
             fetchUnreadCount();
+            checkPostEligibility();
             const unsubscribe = subscribeToUnread();
             return () => {
                 unsubscribe();
             };
         } else {
             setUnreadCount(0);
+            setCanPost(false);
         }
     }, [user, pathname]); // Re-fetch when pathname changes (e.g. leaving a chat)
 
     const fetchUnreadCount = async () => {
         const count = await supabaseService.getUnreadCount();
         setUnreadCount(count as number);
+    };
+
+    const checkPostEligibility = async () => {
+        if (!user) return;
+        const eligible = await supabaseService.canUserPost(user.id);
+        setCanPost(eligible);
     };
 
     const subscribeToUnread = () => {
@@ -65,8 +74,14 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
         };
     };
 
-    const iconClass = (isActive: boolean) =>
-        `p-3 rounded-xl transition-all duration-200 hover:bg-white/10 ${isActive ? 'text-village-accent scale-110' : 'text-white hover:text-village-accent hover:scale-105'}`;
+    const iconClass = (isActive: boolean, disabled: boolean = false) =>
+        `p-3 rounded-xl transition-all duration-200 ${
+            disabled 
+            ? 'text-gray-600 cursor-not-allowed opacity-50' 
+            : isActive 
+                ? 'text-village-accent scale-110 hover:bg-white/10' 
+                : 'text-white hover:text-village-accent hover:scale-105 hover:bg-white/10'
+        }`;
 
     const handleNavigation = (path: string) => {
         if (pathname !== path) {
@@ -75,7 +90,7 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
     };
 
     return (
-        <nav className="h-full w-20 bg-village-base border-r border-gray-700 flex flex-col items-center justify-evenly py-8 z-50 shadow-xl">
+        <nav className="md:h-full md:w-20 h-16 w-full bg-[#2C2A25] md:border-r border-t border-gray-700 flex md:flex-col flex-row items-center md:justify-evenly justify-around md:py-8 z-50 shadow-xl fixed bottom-0 md:relative safe-area-pb">
             <button onClick={() => handleNavigation('/')} title="Plaza" className={iconClass(isPlaza)}>
                 <Home size={32} />
             </button>
@@ -85,56 +100,38 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
             </button>
 
             <button
-                onClick={onPostClick}
-                className={iconClass(false)}
-                title="Post"
+                onClick={() => canPost && onPostClick()}
+                className={iconClass(false, !canPost)}
+                title={canPost ? "Post" : "Complete a job to post"}
+                disabled={!canPost}
             >
                 <PlusSquare size={32} />
             </button>
-
-            <div className="relative">
-                <button onClick={() => handleNavigation('/messages')} title="Messages" className={iconClass(isMessages)}>
-                    <MessageCircle size={32} />
-                </button>
-                {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full transform translate-x-1/4 -translate-y-1/4">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                )}
-            </div>
 
             <button onClick={() => handleNavigation('/search')} title="Search" className={iconClass(isSearch)}>
                 <Search size={32} />
             </button>
 
-            <div className="mt-auto pb-4 flex flex-col items-center gap-6">
-                <button
-                    onClick={() => handleNavigation('/profile')}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg border-2 ${isProfile ? 'border-village-accent scale-110' : 'border-white/20 hover:scale-105'}`}
-                    title="Profile"
-                >
-                    {user ? (
-                        <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold overflow-hidden">
-                            {user.user_metadata?.username?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
-                        </div>
-                    ) : (
-                        <div className="w-full h-full rounded-full bg-gray-600 flex items-center justify-center text-gray-300">
-                            <User size={20} />
-                        </div>
-                    )}
-                </button>
+            <button onClick={() => handleNavigation('/messages')} title="Messages" className="relative p-3 rounded-xl transition-all duration-200 hover:bg-white/10 text-white hover:text-village-accent hover:scale-105">
+                <MessageCircle size={32} className={isMessages ? 'text-village-accent' : ''} />
+                {unreadCount > 0 && (
+                    <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-village-base"></span>
+                )}
+            </button>
 
-                <button
-                    onClick={() => user ? signOut() : setIsAuthModalOpen(true)}
-                    className={`p-3 transition-all duration-200 rounded-xl ${user
-                        ? 'text-red-400 hover:bg-red-500/10 hover:text-red-500'
-                        : 'text-green-400 hover:bg-green-500/10 hover:text-green-500'
-                        }`}
-                    title={user ? "Sign Out" : "Sign In"}
-                >
-                    {user ? <LogOut size={24} /> : <LogIn size={24} />}
+            <button onClick={() => handleNavigation('/profile')} title="Profile" className={iconClass(isProfile)}>
+                <User size={32} />
+            </button>
+
+            {user ? (
+                <button onClick={() => signOut()} title="Sign Out" className="p-3 rounded-xl transition-all duration-200 hover:bg-red-500/20 text-gray-400 hover:text-red-400">
+                    <LogOut size={24} />
                 </button>
-            </div>
+            ) : (
+                <button onClick={() => setIsAuthModalOpen(true)} title="Sign In" className="p-3 rounded-xl transition-all duration-200 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400">
+                    <LogIn size={24} />
+                </button>
+            )}
 
             <AuthModal
                 isOpen={isAuthModalOpen}

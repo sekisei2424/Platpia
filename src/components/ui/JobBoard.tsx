@@ -49,22 +49,44 @@ export default function JobBoard() {
                 return;
             }
 
-            // Create conversation
-            const { id: conversationId } = await supabaseService.createConversation(user.id, selectedJob.company_id);
+            // Check for unposted completed jobs
+            const unpostedJobs = await supabaseService.fetchUnpostedCompletedJobs(user.id);
+            if (unpostedJobs.length > 0) {
+                alert("未投稿の完了体験があります。次の体験に応募する前に、感想を投稿してください！");
+                return;
+            }
 
-            // Send initial application message
-            await supabaseService.sendMessage(
-                conversationId,
-                user.id,
-                `「${selectedJob.title}」の体験に興味があります。`,
-                'booking_request'
-            );
+            // Create Job Application Record
+            await supabaseService.applyForJob(selectedJob.id, user.id);
 
-            // Redirect to the conversation
-            router.push(`/messages/${conversationId}`);
-        } catch (error) {
+            // Send initial application message (if company_id exists)
+            if (selectedJob.company_id) {
+                try {
+                    const { id: conversationId } = await supabaseService.createConversation(user.id, selectedJob.company_id);
+                    await supabaseService.sendMessage(
+                        conversationId,
+                        user.id,
+                        `[JOB_LINK:${selectedJob.id}] 「${selectedJob.title}」の体験に応募しました。`,
+                        'booking_request'
+                    );
+                    router.push(`/messages/${conversationId}`);
+                    return;
+                } catch (msgError) {
+                    console.error("Error sending message:", msgError);
+                    // Fall through to success alert
+                }
+            }
+
+            alert("応募が完了しました。");
+            setSelectedJob(null);
+
+        } catch (error: any) {
             console.error("Error applying:", error);
-            alert("応募に失敗しました。もう一度お試しください。");
+            if (error.code === '23505' || error.message?.includes('duplicate')) {
+                alert("すでに応募済みです。");
+            } else {
+                alert(`応募に失敗しました: ${error.message || 'Unknown error'}`);
+            }
         }
     };
 

@@ -5,21 +5,25 @@ interface ModalProps {
     onClose: () => void;
     title: string;
     children: React.ReactNode;
+    maxWidth?: string;
 }
 
-export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-md' }: ModalProps) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-village-base border border-gray-700 rounded-lg w-full max-w-md shadow-xl">
-                <div className="flex justify-between items-center p-4 border-b border-gray-700">
-                    <h2 className="text-xl font-bold text-white">{title}</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+            <div 
+                className={`bg-[#FDFBF7] w-full ${maxWidth} rounded-xl shadow-2xl overflow-hidden transition-all duration-300`}
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white/50">
+                    <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors p-1 hover:bg-gray-100 rounded-full">
                         <X size={24} />
                     </button>
                 </div>
-                <div className="p-4 text-white">
+                <div className="p-4 text-gray-800">
                     {children}
                 </div>
             </div>

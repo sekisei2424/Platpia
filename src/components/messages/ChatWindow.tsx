@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabaseService } from '@/services/supabaseService';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/lib/supabase/client';
 import { Send } from 'lucide-react';
+import PostForm from '@/components/ui/PostForm';
+import JobDetailModal from '@/components/ui/JobDetailModal';
 
 interface Message {
     id: string;
@@ -20,9 +23,18 @@ interface ChatWindowProps {
 
 export default function ChatWindow({ conversationId }: ChatWindowProps) {
     const { user } = useAuth();
+    const router = useRouter();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    
+    // Post Feedback State
+    const [isPostFormOpen, setIsPostFormOpen] = useState(false);
+    const [feedbackJobId, setFeedbackJobId] = useState<string | null>(null);
+
+    // Job Detail State
+    const [selectedJob, setSelectedJob] = useState<any>(null);
+    const [isJobModalOpen, setIsJobModalOpen] = useState(false);
 
     useEffect(() => {
         loadMessages();
@@ -100,33 +112,85 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
 
         try {
             const sentMessage = await supabaseService.sendMessage(conversationId, user.id, tempMessage.content);
-            // Replace temp message with real one if needed, or just let subscription handle it
-            // But subscription might duplicate if we don't handle it.
-            // A simple way is to filter out the temp message when the real one arrives, 
-            // or just update the ID.
-            // For now, let's rely on the subscription but we need to avoid duplicates.
-            // Actually, the subscription will bring the real message.
-            // We should remove the temp message when we get the real one, or update it.
-
-            // Let's just update the temp message with the real ID
             setMessages((prev) => prev.map(msg => msg.id === tempId ? (sentMessage as Message) : msg));
 
         } catch (error) {
             console.error('Error sending message:', JSON.stringify(error, null, 2));
-            // Rollback on error
             setMessages((prev) => prev.filter(msg => msg.id !== tempId));
             alert('Failed to send message');
+        }
+    };
+
+    const parseContent = (content: string) => {
+        // Check for Post Feedback
+        const feedbackMatch = content.match(/\[POST_FEEDBACK:(.+?)\]/);
+        if (feedbackMatch) {
+            const jobId = feedbackMatch[1];
+            const text = content.replace(feedbackMatch[0], '').trim();
+            return { text, action: 'post_feedback', jobId };
+        }
+        
+        // Check for Job Link (Applied)
+        // Format: [JOB_APPLIED:job_id] Text...
+        // Or just detect the standard text if we didn't change the format yet.
+        // But we should change the format in PostDetailModal/JobBoard to be robust.
+        // For now, let's support a new format we will implement: [JOB_LINK:job_id]
+        const jobLinkMatch = content.match(/\[JOB_LINK:(.+?)\]/);
+        if (jobLinkMatch) {
+            const jobId = jobLinkMatch[1];
+            const text = content.replace(jobLinkMatch[0], '').trim();
+            return { text, action: 'view_job', jobId };
+        }
+
+        return { text: content, action: null };
+    };
+
+    const handlePostFeedback = (jobId: string) => {
+        setFeedbackJobId(jobId);
+        setIsPostFormOpen(true);
+    };
+
+    const handleViewJob = async (jobId: string) => {
+        try {
+            const job = await supabaseService.fetchJob(jobId);
+            setSelectedJob(job);
+            setIsJobModalOpen(true);
+        } catch (error) {
+            console.error("Error fetching job:", error);
+            alert("案件情報の取得に失敗しました。");
         }
     };
 
     if (!user) return null;
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full relative">
             {/* Messages Area */}
             <div className="flex-grow overflow-y-auto p-4 space-y-4">
                 {messages.map((msg) => {
                     const isMe = msg.sender_id === user.id;
+                    const isSystem = msg.message_type === 'system';
+                    const isBooking = msg.message_type === 'booking_request';
+                    const { text, action, jobId } = parseContent(msg.content);
+
+                    if (isSystem) {
+                        return (
+                            <div key={msg.id} className="flex justify-center my-6">
+                                <div className="bg-gray-100 text-gray-600 text-sm px-6 py-3 rounded-2xl text-center max-w-[85%] shadow-sm border border-gray-200">
+                                    <p className="whitespace-pre-wrap font-medium">{text}</p>
+                                    {action === 'post_feedback' && jobId && (
+                                        <button 
+                                            onClick={() => handlePostFeedback(jobId)} 
+                                            className="mt-3 px-5 py-2 bg-village-accent text-white rounded-full text-sm font-bold hover:bg-green-600 transition-colors shadow-sm"
+                                        >
+                                            感想を投稿する
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    }
+
                     return (
                         <div
                             key={msg.id}
@@ -136,9 +200,19 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                                 className={`max-w-[70%] rounded-2xl px-4 py-2 ${isMe
                                     ? 'bg-blue-500 text-white rounded-br-none'
                                     : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm'
-                                    }`}
+                                    } ${isBooking ? 'border-l-4 border-village-accent' : ''}`}
                             >
-                                <p>{msg.content}</p>
+                                <p className="whitespace-pre-wrap">{text}</p>
+                                
+                                {action === 'view_job' && jobId && (
+                                    <button 
+                                        onClick={() => handleViewJob(jobId)}
+                                        className="mt-2 text-sm text-blue-600 hover:underline font-bold block bg-blue-50 px-3 py-1 rounded-lg w-full text-center"
+                                    >
+                                        案件詳細を見る
+                                    </button>
+                                )}
+
                                 <span className={`text-xs opacity-70 mt-1 block ${isMe ? 'text-blue-100' : 'text-gray-400'}`}>
                                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
@@ -168,6 +242,22 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                     </button>
                 </form>
             </div>
+
+            {/* Modals */}
+            {isPostFormOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-xl w-full max-w-2xl m-4 max-h-[90vh] overflow-y-auto">
+                        <PostForm onClose={() => setIsPostFormOpen(false)} />
+                    </div>
+                </div>
+            )}
+
+            <JobDetailModal 
+                job={selectedJob} 
+                isOpen={isJobModalOpen} 
+                onClose={() => setIsJobModalOpen(false)}
+                onApply={() => {}} // Already applied if viewing from chat usually
+            />
         </div >
     );
 }
