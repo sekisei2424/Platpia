@@ -115,11 +115,18 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
 
     return (
         <>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
+            <div 
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+            >
                 {/* Backdrop to close */}
                 <div
                     className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                    onClick={onClose}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onClose();
+                    }}
                 />
 
                 <div className="relative w-full h-full flex flex-col md:flex-row gap-4 md:gap-8 pointer-events-none justify-center items-center">
