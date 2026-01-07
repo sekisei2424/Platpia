@@ -1,6 +1,5 @@
 import * as Phaser from 'phaser';
 import { PlazaScene } from './scenes/PlazaScene';
-import { VillageScene } from './scenes/VillageScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,

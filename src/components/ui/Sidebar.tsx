@@ -19,7 +19,6 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
     const [canPost, setCanPost] = useState(false);
 
     const isPlaza = pathname === '/' || pathname === '/plaza';
-    const isVillage = pathname === '/village';
     const isSearch = pathname === '/search';
     const isProfile = pathname === '/profile';
     const isMessages = pathname.startsWith('/messages');
@@ -95,10 +94,10 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
                 <Home size={32} />
             </button>
 
-            <button onClick={() => handleNavigation('/village')} title="My Village" className={iconClass(isVillage)}>
-                <MapPin size={32} />
+            <button onClick={() => handleNavigation('/search')} title="Search" className={iconClass(isSearch)}>
+                <Search size={32} />
             </button>
-
+            
             <button
                 onClick={() => canPost && onPostClick()}
                 className={iconClass(false, !canPost)}
@@ -106,10 +105,6 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
                 disabled={!canPost}
             >
                 <PlusSquare size={32} />
-            </button>
-
-            <button onClick={() => handleNavigation('/search')} title="Search" className={iconClass(isSearch)}>
-                <Search size={32} />
             </button>
 
             <button onClick={() => handleNavigation('/messages')} title="Messages" className="relative p-3 rounded-xl transition-all duration-200 hover:bg-white/10 text-white hover:text-village-accent hover:scale-105">

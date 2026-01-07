@@ -33,11 +33,10 @@ export default function PhaserGame({
             const initGame = async () => {
                 if (game) return; // Already initialized
 
-                const [Phaser, { gameConfig }, { PlazaScene }, { VillageScene }] = await Promise.all([
+                const [Phaser, { gameConfig }, { PlazaScene }] = await Promise.all([
                     import('phaser'),
                     import('@/game/config'),
                     import('@/game/scenes/PlazaScene'),
-                    import('@/game/scenes/VillageScene')
                 ]);
 
                 const parent = document.getElementById('phaser-container');
@@ -72,13 +71,11 @@ export default function PhaserGame({
 
                 // Manually add scenes
                 game.scene.add('PlazaScene', PlazaScene);
-                game.scene.add('VillageScene', VillageScene);
 
                 game.events.once('ready', () => {
                     const sceneManager = game?.scene;
                     if (sceneManager) {
-                        const sceneClass = currentScene === 'plaza' ? 'PlazaScene' : 'VillageScene';
-                        sceneManager.start(sceneClass);
+                        sceneManager.start('PlazaScene');
                     }
                 });
 
