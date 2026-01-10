@@ -55,7 +55,6 @@ export default function SearchPage() {
 
     const targetLocation = calculateTargetLocation();
 
-    // 元のボタンスタイル（黒枠・パキッとした影・▶表示）に戻しました
     const FilterButton = ({ label, selectedList, setter }: { label: string, selectedList: string[], setter: (v: string[]) => void }) => {
         const selected = selectedList.includes(label);
         return (
@@ -85,7 +84,6 @@ export default function SearchPage() {
             <div className="flex-grow relative z-0 overflow-y-auto pb-20 md:pb-0 bg-gray-100/50">
                 <div className="max-w-6xl mx-auto p-6 md:p-8">
                     
-                    {/* ヘッダーエリア */}
                     <div className="mb-8 flex items-center gap-4 border-b-2 border-gray-900 pb-4 bg-transparent">
                         <div className="bg-gray-900 p-2 border-2 border-gray-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.1)]">
                             <SearchIcon className="text-white" size={28} strokeWidth={2.5} />
@@ -100,7 +98,6 @@ export default function SearchPage() {
                         </div>
                     </div>
 
-                    {/* 検索バーエリア：元のデザイン（黒枠・緑フォーカスなど） */}
                     <div className="flex flex-col md:flex-row gap-4 mb-8 relative z-10">
                          <div className="relative flex-grow group">
                             <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
@@ -130,11 +127,9 @@ export default function SearchPage() {
                         </button>
                     </div>
 
-                    {/* フィルター展開エリア：元のデザイン（黒枠・コーナー装飾） */}
                     {showFilters && (
                         <div className="relative mb-10 animate-in fade-in slide-in-from-top-2 duration-200 pl-1 pt-1">
                             <div className="relative bg-white border-2 border-gray-900 p-6 shadow-[4px_4px_0px_rgba(0,0,0,0.1)]">
-                                {/* コーナー装飾 */}
                                 <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-gray-900"></div>
                                 <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-gray-900"></div>
                                 <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-gray-900"></div>

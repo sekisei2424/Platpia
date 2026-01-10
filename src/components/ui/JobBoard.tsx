@@ -49,7 +49,10 @@ export default function JobBoard({ searchQuery = '', filterLocation = [], filter
                     if (profilesData) {
                         const profileMap: Record<string, ProfileData> = {};
                         profilesData.forEach(p => {
-                            profileMap[p.id] = p;
+                            profileMap[p.id] = {
+                            ...p,
+                            username: p.username ?? "不明なユーザー" // nullの場合は代わりの文字を入れる
+                            };
                         });
                         setProfiles(profileMap);
                     }

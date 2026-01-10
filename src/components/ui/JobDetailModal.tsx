@@ -105,13 +105,11 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
                 `}
                 onClick={e => e.stopPropagation()}
             >
-                 {/* 四隅の装飾ピン */}
                  <div className="absolute top-1 left-1 w-1 h-1 bg-gray-400 z-30"></div>
                  <div className="absolute top-1 right-1 w-1 h-1 bg-gray-400 z-30"></div>
                  <div className="absolute bottom-1 left-1 w-1 h-1 bg-gray-400 z-30"></div>
                  <div className="absolute bottom-1 right-1 w-1 h-1 bg-gray-400 z-30"></div>
 
-                {/* Header */}
                 <div className="flex justify-between items-center px-5 py-3 border-b-2 border-gray-600 bg-white sticky top-0 z-20">
                     <div className="flex items-center gap-2">
                         <div className="bg-gray-700 text-white p-1">
@@ -167,9 +165,7 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
                                     </div>
                                 )}
 
-                                {/* 掲載者情報 */}
                                 <div className="bg-white p-3 border-2 border-gray-600 shadow-[2px_2px_0px_0px_#e5e7eb] flex items-center gap-3">
-                                    {/* アイコンを丸く変更: rounded-full を追加 */}
                                     <div className="w-10 h-10 border-2 border-gray-600 bg-gray-100 flex-shrink-0 overflow-hidden rounded-full">
                                         {ownerProfile?.avatar_type ? (
                                             <img src={`/images/${ownerProfile.avatar_type}`} alt="Owner" className="w-full h-full object-cover" />
@@ -257,7 +253,6 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
                                     applicants.map(app => (
                                         <div key={app.id} className="bg-white border-2 border-gray-600 p-3 shadow-[2px_2px_0px_0px_#cbd5e1]">
                                             <div className="flex items-center gap-2 mb-2 pb-2 border-b-2 border-gray-100">
-                                                {/* 応募者アイコンを丸く変更: rounded-full を追加 */}
                                                 <div className="w-8 h-8 border-2 border-gray-600 bg-gray-100 overflow-hidden shrink-0 rounded-full">
                                                     {app.profiles?.avatar_type ? (
                                                         <img src={`/images/${app.profiles.avatar_type}`} alt="Avatar" className="w-full h-full object-cover" />
