@@ -202,65 +202,58 @@ export default function AvatarBuilder({ onSaved }: AvatarBuilderProps) {
     };
 
     return (
-        <div className="w-full h-full bg-white border-2 border-gray-900 flex flex-col md:flex-row gap-6 p-6 font-pixel text-gray-900">
-            {/* Left: Canvas Preview */}
-            <div className="md:w-3/5 flex flex-col items-center justify-center">
-                <div className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-4">Preview</div>
-                <div className="relative bg-white border-2 border-gray-900 rounded-lg p-6 shadow-[4px_4px_0px_rgba(0,0,0,0.1)]">
-                    <canvas
-                        ref={canvasRef}
-                        width={256}
-                        height={256}
-                        className="border-2 border-gray-900 rounded-lg bg-gray-100 image-rendering-pixelated"
+        <div className="flex flex-col h-full w-full bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] overflow-hidden">
+            {/* Top: Preview Area */}
+            <div className="flex-shrink-0 bg-gray-100 p-4 border-b-4 border-gray-900 flex items-center justify-center relative">
+                 <div className="absolute inset-0 pattern-dots opacity-10 pointer-events-none"></div>
+                <div className="w-48 h-48 sm:w-56 sm:h-56 bg-white border-2 border-gray-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]">
+                    <canvas 
+                        ref={canvasRef} 
+                        width={500} 
+                        height={500} 
+                        className="w-full h-full object-contain"
                     />
                 </div>
             </div>
 
-            {/* Right: Part Selectors */}
-            <div className="md:w-2/5 flex flex-col">
-                <div className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-4">Customize</div>
-                
-                <div className="flex-grow overflow-y-auto space-y-3 pr-2">
-                    {(['Body', 'Clothes', 'Eyes', 'Hair', 'Mouth'] as PartType[]).map((partType) => (
-                        <div key={partType} className="bg-white border-2 border-gray-900 p-4 rounded-lg shadow-[2px_2px_0px_rgba(0,0,0,0.1)]">
-                            <label className="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">
-                                {partType}
-                            </label>
-                            <select
-                                value={selectedParts[partType]}
-                                onChange={(e) =>
-                                    setSelectedParts((prev) => ({
-                                        ...prev,
-                                        [partType]: e.target.value,
-                                    }))
-                                }
-                                className="w-full bg-white border-2 border-gray-900 px-3 py-2 text-gray-900 text-xs font-bold focus:outline-none focus:bg-green-50/50 transition-colors rounded cursor-pointer shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)]"
-                            >
-                                <option value="">None</option>
-                                {partOptions[partType].map((option) => (
-                                    <option key={option} value={option}>
-                                        {option.replace(/\.[^/.]+$/, '')}
-                                    </option>
-                                ))}
-                            </select>
+            {/* Bottom: Controls Area */}
+            <div className="flex-1 flex flex-col bg-white min-h-0">                
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                    {Object.keys(partOptions).map((part) => (
+                        <div key={part} className="space-y-1">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{part}</label>
+                            <div className="flex gap-2">
+                                <select 
+                                    className="flex-1 px-2 py-1.5 border-2 border-gray-900 font-bold text-xs bg-white text-gray-900 focus:bg-yellow-50 outline-none shadow-[2px_2px_0px_0px_#000] active:shadow-none active:translate-y-[2px] transition-all appearance-none rounded-none"
+                                    value={selectedParts[part as PartType] || ''}
+                                    onChange={(e) => setSelectedParts((prev) => ({ ...prev, [part as PartType]: e.target.value }))}
+                                >
+                                    {partOptions[part as PartType].map((opt) => (
+                                        <option key={opt} value={opt} className="text-gray-900">{opt.replace('.png', '')}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Save Button */}
-                <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className={`
-                        w-full mt-4 px-4 py-3 border-2 border-gray-900 font-bold transition-all text-sm uppercase tracking-widest
-                        ${saving 
-                            ? "bg-gray-400 text-gray-700 opacity-50 cursor-not-allowed shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)]" 
-                            : "bg-gray-900 text-white shadow-[inset_-2px_-2px_0px_rgba(50,50,50,1),3px_3px_0px_#000] hover:bg-gray-800 active:shadow-none active:translate-y-[3px]"
-                        }
-                    `}
-                >
-                    {saving ? '保存中...' : 'Save Avatar'}
-                </button>
+                <div className="p-4 border-t-2 border-gray-100 bg-gray-50 flex gap-2">
+                     {onSaved && (
+                         <button 
+                            onClick={onSaved}
+                            className="flex-1 py-3 border-2 border-gray-900 bg-white text-gray-900 font-bold text-sm uppercase tracking-widest hover:bg-gray-100 shadow-[3px_3px_0px_0px_#000] active:translate-y-[2px] active:shadow-none transition-all"
+                        >
+                            CANCEL
+                        </button>
+                    )}
+                    <button 
+                        onClick={handleSave} 
+                        disabled={saving}
+                        className="flex-1 py-3 border-2 border-gray-900 bg-gray-900 text-white font-bold text-sm uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-[3px_3px_0px_0px_#000] active:translate-y-[2px] active:shadow-none transition-all"
+                    >
+                        {saving ? 'SAVING...' : 'SAVE'}
+                    </button>
+                </div>
             </div>
         </div>
     );

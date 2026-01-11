@@ -20,7 +20,7 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
 
     const isPlaza = pathname === '/' || pathname === '/plaza';
     const isSearch = pathname === '/search';
-    const isProfile = pathname === '/profile';
+    const isProfile = pathname.startsWith('/profile');
     const isMessages = pathname.startsWith('/messages');
 
     useEffect(() => {

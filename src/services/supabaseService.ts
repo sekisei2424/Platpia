@@ -539,4 +539,116 @@ export const supabaseService = {
         if (error) throw error;
         return data;
     },
+
+    // Likes and Bookmarks
+    async getLikeStatus(userId: string, postId: string): Promise<boolean> {
+        const { data, error } = await supabase
+            .from('likes')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('post_id', postId)
+            .single();
+        
+        if (error && error.code !== 'PGRST116') return false; // PGRST116 is no rows
+        return !!data;
+    },
+
+    async toggleLike(userId: string, postId: string): Promise<{ liked: boolean, count: number }> {
+        // Check if liked
+        const liked = await this.getLikeStatus(userId, postId);
+        
+        if (liked) {
+            // Unlike
+            await supabase.from('likes').delete().eq('user_id', userId).eq('post_id', postId);
+        } else {
+            // Like
+            await supabase.from('likes').insert({ user_id: userId, post_id: postId });
+        }
+
+        // Get updated count
+        const { count } = await supabase
+            .from('likes')
+            .select('id', { count: 'exact', head: true })
+            .eq('post_id', postId);
+            
+        return { liked: !liked, count: count || 0 };
+    },
+    
+    async getBookmarkStatus(userId: string, postId: string): Promise<boolean> {
+        const { data, error } = await supabase
+            .from('bookmarks')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('post_id', postId)
+            .single();
+            
+        if (error && error.code !== 'PGRST116') return false;
+        return !!data;
+    },
+
+    async toggleBookmark(userId: string, postId: string): Promise<boolean> {
+        const bookmarked = await this.getBookmarkStatus(userId, postId);
+        
+        if (bookmarked) {
+            await supabase.from('bookmarks').delete().eq('user_id', userId).eq('post_id', postId);
+        } else {
+            await supabase.from('bookmarks').insert({ user_id: userId, post_id: postId });
+        }
+        
+        return !bookmarked;
+    },
+    
+    async fetchUserPosts(userId: string): Promise<Post[]> {
+        const { data, error } = await supabase
+            .from('plaza_posts')
+            .select(`
+                *,
+                profiles (
+                    username,
+                    avatar_type,
+                    user_type
+                ),
+                jobs (
+                    title
+                )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching user posts:', error);
+            return [];
+        }
+
+        return data as Post[];
+    },
+
+    async fetchBookmarkedPosts(userId: string): Promise<Post[]> {
+        const { data, error } = await supabase
+            .from('bookmarks')
+            .select(`
+                post_id,
+                plaza_posts:post_id (
+                    *,
+                    profiles (
+                        username,
+                        avatar_type,
+                        user_type
+                    ),
+                    jobs (
+                        title
+                    )
+                )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching bookmarked posts:', error);
+            return [];
+        }
+
+        // Extract posts from the join result
+        return data.map((item: any) => item.plaza_posts) as Post[];
+    },
 };

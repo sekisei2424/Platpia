@@ -119,37 +119,46 @@ export default function PostForm({ onClose }: PostFormProps) {
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto">
+        <div className="w-full bg-white border-4 border-gray-900 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.1)] p-4 md:p-6">
             <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
 
-            {isCompany && (
-                <div className="flex gap-2 mb-4 bg-gray-100 p-1 rounded-xl">
+            {isCompany && ( // ...existing code...
+
+                <div className="flex gap-4 mb-6 border-b-4 border-gray-900 pb-4">
                     <button
                         type="button"
                         onClick={() => setMode('post')}
-                        className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${mode === 'post' ? 'bg-white shadow text-village-accent' : 'text-gray-500 hover:bg-gray-200'}`}
+                        className={`flex-1 py-3 border-2 border-gray-900 font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                            mode === 'post' 
+                            ? 'bg-gray-900 text-white shadow-[4px_4px_0px_0px_#000]' 
+                            : 'bg-white text-gray-900 hover:bg-gray-100 shadow-[2px_2px_0px_0px_#000]'
+                        }`}
                     >
                         <MessageSquare size={16} />
-                        通常投稿
+                        NORMAL POST
                     </button>
                     <button
                         type="button"
                         onClick={() => setMode('job')}
-                        className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${mode === 'job' ? 'bg-white shadow text-village-accent' : 'text-gray-500 hover:bg-gray-200'}`}
+                        className={`flex-1 py-3 border-2 border-gray-900 font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                            mode === 'job' 
+                            ? 'bg-gray-900 text-white shadow-[4px_4px_0px_0px_#000]' 
+                            : 'bg-white text-gray-900 hover:bg-gray-100 shadow-[2px_2px_0px_0px_#000]'
+                        }`}
                     >
                         <Briefcase size={16} />
-                        体験募集を作成
+                        CREATE JOB
                     </button>
                 </div>
             )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 {mode === 'post' ? (
-                    <div className="relative">
+                    <div className="relative space-y-4">
                         {/* Individual User: Select Completed Job */}
                         {!isCompany && selectedJobId && jobs.length > 0 && (
-                            <div className="mb-2 p-2 bg-blue-50 text-blue-700 rounded-lg text-sm flex items-center gap-2">
-                                <span className="font-bold whitespace-nowrap">体験:</span>
+                            <div className="p-3 bg-blue-50 border-2 border-gray-900 text-gray-900 text-sm flex items-center gap-2 font-bold">
+                                <span className="uppercase tracking-wider">EXPERIENCE:</span>
                                 <select 
                                     value={selectedJobId} 
                                     onChange={(e) => {
@@ -157,7 +166,7 @@ export default function PostForm({ onClose }: PostFormProps) {
                                         const job = jobs.find(j => j.job_id === e.target.value);
                                         if (job) setContent(`「${job.jobs?.title}」を体験しました！`);
                                     }}
-                                    className="bg-transparent border-none focus:ring-0 font-medium cursor-pointer w-full text-ellipsis"
+                                    className="bg-transparent border-none focus:ring-0 font-bold cursor-pointer w-full text-ellipsis outline-none"
                                 >
                                     {jobs.map(job => (
                                         <option key={job.id} value={job.job_id}>
@@ -170,8 +179,8 @@ export default function PostForm({ onClose }: PostFormProps) {
 
                         {/* Company User: Select Active Job to Promote */}
                         {isCompany && companyJobs.length > 0 && (
-                            <div className="mb-2 p-2 bg-green-50 text-green-700 rounded-lg text-sm flex items-center gap-2">
-                                <span className="font-bold whitespace-nowrap">案件宣伝:</span>
+                            <div className="p-3 bg-green-50 border-2 border-gray-900 text-gray-900 text-sm flex items-center gap-2 font-bold">
+                                <span className="uppercase tracking-wider">PROMOTE:</span>
                                 <select 
                                     value={selectedJobId || ''} 
                                     onChange={(e) => {
@@ -179,9 +188,9 @@ export default function PostForm({ onClose }: PostFormProps) {
                                         const job = companyJobs.find(j => j.id === e.target.value);
                                         if (job && !content) setContent(`【募集中】${job.title}\n\n${job.description?.substring(0, 50)}...`);
                                     }}
-                                    className="bg-transparent border-none focus:ring-0 font-medium cursor-pointer w-full text-ellipsis"
+                                    className="bg-transparent border-none focus:ring-0 font-bold cursor-pointer w-full text-ellipsis outline-none"
                                 >
-                                    <option value="">案件を選択しない</option>
+                                    <option value="">NO SELECTION</option>
                                     {companyJobs.map(job => (
                                         <option key={job.id} value={job.id}>
                                             {job.title}
@@ -194,65 +203,78 @@ export default function PostForm({ onClose }: PostFormProps) {
                         <textarea
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                            placeholder={user ? "村での出来事をシェアしよう！" : "投稿するにはログインしてください..."}
+                            placeholder={user ? "SHARE YOUR VILLA LIFE..." : "Please login to post..."}
                             disabled={!user}
-                            className="w-full h-32 bg-white/50 backdrop-blur-sm rounded-2xl p-6 text-lg text-gray-800 placeholder-gray-500 border border-white/50 focus:outline-none focus:ring-2 focus:ring-village-accent/50 resize-none shadow-inner transition-all disabled:opacity-50"
+                            className="w-full h-40 bg-white border-2 border-gray-900 p-4 text-lg font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-yellow-50 resize-none shadow-inner transition-all disabled:opacity-50 disabled:bg-gray-100"
                         />
-                        <div className="absolute bottom-4 right-4 text-gray-500 text-sm">
-                            {content.length}/280
+                        <div className="text-right text-xs font-bold text-gray-400 uppercase tracking-widest">
+                            {content.length}/280 CHARS
                         </div>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4">
-                        <input
-                            type="text"
-                            value={jobTitle}
-                            onChange={(e) => setJobTitle(e.target.value)}
-                            placeholder="体験のタイトル（例：村の清掃活動）"
-                            className="w-full bg-white/50 backdrop-blur-sm rounded-xl p-4 text-lg font-bold text-gray-800 placeholder-gray-500 border border-white/50 focus:outline-none focus:ring-2 focus:ring-village-accent/50"
-                        />
-                        <textarea
-                            value={jobDescription}
-                            onChange={(e) => setJobDescription(e.target.value)}
-                            placeholder="体験の詳細説明..."
-                            className="w-full h-32 bg-white/50 backdrop-blur-sm rounded-xl p-4 text-base text-gray-800 placeholder-gray-500 border border-white/50 focus:outline-none focus:ring-2 focus:ring-village-accent/50 resize-none"
-                        />
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Job Title</label>
+                            <input
+                                type="text"
+                                value={jobTitle}
+                                onChange={(e) => setJobTitle(e.target.value)}
+                                placeholder="E.g. VILLAGE CLEANUP"
+                                className="w-full bg-white border-2 border-gray-900 p-3 font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-yellow-50"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Description</label>
+                            <textarea
+                                value={jobDescription}
+                                onChange={(e) => setJobDescription(e.target.value)}
+                                placeholder="DETAILS ABOUT THE JOB..."
+                                className="w-full h-32 bg-white border-2 border-gray-900 p-3 font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-yellow-50 resize-none"
+                            />
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
-                            <input
-                                type="text"
-                                value={jobLocation}
-                                onChange={(e) => setJobLocation(e.target.value)}
-                                placeholder="場所（例：中央広場）"
-                                className="w-full bg-white/50 backdrop-blur-sm rounded-xl p-4 text-sm text-gray-800 placeholder-gray-500 border border-white/50 focus:outline-none focus:ring-2 focus:ring-village-accent/50"
-                            />
-                            <input
-                                type="text"
-                                value={jobReward}
-                                onChange={(e) => setJobReward(e.target.value)}
-                                placeholder="リワード（例：ありがとうカード）"
-                                className="w-full bg-white/50 backdrop-blur-sm rounded-xl p-4 text-sm text-gray-800 placeholder-gray-500 border border-white/50 focus:outline-none focus:ring-2 focus:ring-village-accent/50"
-                            />
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Location</label>
+                                <input
+                                    type="text"
+                                    value={jobLocation}
+                                    onChange={(e) => setJobLocation(e.target.value)}
+                                    placeholder="E.g. PLAZA"
+                                    className="w-full bg-white border-2 border-gray-900 p-3 font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-yellow-50"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Reward</label>
+                                <input
+                                    type="text"
+                                    value={jobReward}
+                                    onChange={(e) => setJobReward(e.target.value)}
+                                    placeholder="E.g. 500 COINS"
+                                    className="w-full bg-white border-2 border-gray-900 p-3 font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-yellow-50"
+                                />
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {previewUrl && (
-                    <div className="relative w-full h-48 bg-gray-100 rounded-xl overflow-hidden">
-                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="relative w-full h-48 bg-gray-100 border-2 border-gray-900 overflow-hidden group">
+                        <div className="absolute inset-0 pattern-dots opacity-20 pointer-events-none"></div>
+                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover relative z-10" />
                         <button 
                             type="button"
                             onClick={() => { setImageFile(null); setPreviewUrl(null); }}
-                            className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full hover:bg-black/70"
+                            className="absolute top-2 right-2 bg-white border-2 border-gray-900 text-gray-900 p-1 hover:bg-red-500 hover:text-white transition-colors z-20 shadow-[2px_2px_0px_0px_#000]"
                         >
                             <X size={16} />
                         </button>
                     </div>
                 )}
 
-                <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 px-4 py-2 rounded-xl text-gray-600 hover:bg-white/50 transition-colors cursor-pointer">
+                <div className="flex flex-col gap-4 border-t-4 border-gray-100 pt-6">
+                    <label className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-900 bg-white text-gray-900 font-bold uppercase tracking-widest hover:bg-gray-50 transition-all cursor-pointer shadow-[4px_4px_0px_0px_#000] active:translate-y-[1px] active:shadow-none">
                         <ImageIcon size={20} />
-                        <span>{mode === 'job' ? 'サムネイル画像' : '写真を追加'}</span>
+                        <span>{mode === 'job' ? 'THUMBNAIL' : 'ADD IMAGE'}</span>
                         <input 
                             type="file" 
                             accept="image/*" 
@@ -261,31 +283,31 @@ export default function PostForm({ onClose }: PostFormProps) {
                         />
                     </label>
 
-                    <div className="flex gap-4">
+                    <div className="flex gap-3 w-full">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-6 py-3 rounded-xl text-gray-600 hover:bg-gray-100/50 transition-colors font-medium"
+                            className="flex-1 px-6 py-3 border-2 border-transparent font-bold text-gray-500 hover:text-gray-900 uppercase tracking-widest transition-colors text-center"
                         >
-                            キャンセル
+                            CANCEL
                         </button>
                         {user ? (
                             <button
                                 type="submit"
                                 disabled={isSubmitting || (mode === 'post' && !content.trim() && !imageFile) || (mode === 'job' && (!jobTitle.trim() || !jobDescription.trim()))}
-                                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-village-accent to-green-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-900 bg-yellow-400 text-gray-900 font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_#000] hover:bg-yellow-300 active:translate-y-[1px] active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none min-w-0"
                             >
-                                <Send size={18} />
-                                {isSubmitting ? '送信中...' : (mode === 'job' ? '募集を開始' : '投稿する')}
+                                <Send size={18} className="flex-shrink-0" />
+                                <span className="truncate">{isSubmitting ? 'SENDING...' : (mode === 'job' ? 'PUBLISH JOB' : 'POST')}</span>
                             </button>
                         ) : (
                             <button
                                 type="button"
                                 onClick={() => setShowAuthModal(true)}
-                                className="flex items-center gap-2 px-8 py-3 bg-village-base text-white rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-all"
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-900 bg-gray-900 text-white font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_#000] hover:bg-gray-800 active:translate-y-[1px] active:shadow-none transition-all min-w-0"
                             >
-                                <LogIn size={18} />
-                                ログインして投稿
+                                <LogIn size={18} className="flex-shrink-0" />
+                                <span className="truncate">LOGIN</span>
                             </button>
                         )}
                     </div>

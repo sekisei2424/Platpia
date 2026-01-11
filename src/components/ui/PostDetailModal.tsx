@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { X, MessageCircle, Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, MessageCircle, Briefcase, ChevronLeft, ChevronRight, Heart, Bookmark } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabaseService } from '@/services/supabaseService';
 import { useRouter } from 'next/navigation';
@@ -129,6 +129,13 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
         }
     };
 
+    const handleAvatarClick = () => {
+        if (post.user_id) {
+            onClose(); // Close the modal
+            router.push(`/profile/${post.user_id}`);
+        }
+    };
+
     if (!post) return null;
 
     return (
@@ -158,7 +165,7 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                 )}
 
                 <div 
-                    className="pointer-events-auto bg-white w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row border-4 border-gray-900 shadow-[8px_8px_0px_0px_#000] relative z-50 mx-4 md:mx-0"
+                    className="bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row border-4 border-gray-900 shadow-[8px_8px_0px_0px_#000] relative z-50 mx-4 md:mx-0"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Close Button (Mobile Only: Absolute Top-Right) */}
@@ -187,7 +194,7 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                              </span>
                         </div>
 
-                        <div className="w-32 h-32 md:w-56 md:h-56 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] rounded-full overflow-hidden mb-4 md:mb-6 relative group">
+                        <div className="w-32 h-32 md:w-56 md:h-56 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] rounded-full overflow-hidden mb-4 md:mb-6 relative group cursor-pointer" onClick={handleAvatarClick}>
                             <img
                                 src={getAvatarUrl(post.avatar_type || post.avatarPath)}
                                 alt={post.username}
@@ -228,7 +235,10 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                     {/* Right Side: Content */}
                     <div className="flex-1 flex flex-col relative bg-white min-h-0">
                         {/* Header Bar - Desktop Only */}
-                        <div className="hidden md:flex h-14 border-b-4 border-gray-900 items-center justify-end px-4 bg-gray-50 shrink-0">
+                        <div className="hidden md:flex h-14 border-b-4 border-gray-900 items-center justify-end px-4 bg-gray-50 shrink-0 gap-4">
+                            <LikeButton post={post} />
+                            <BookmarkButton post={post} />
+                            <div className="w-px h-6 bg-gray-300 mx-2"></div>
                             <button 
                                 onClick={onClose}
                                 className="w-8 h-8 flex items-center justify-center bg-red-500 text-white border-2 border-gray-900 hover:bg-red-600 shadow-[2px_2px_0px_0px_#000] active:translate-y-[2px] active:shadow-none transition-all"
@@ -243,6 +253,12 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                                 {new Date(post.created_at || Date.now()).toLocaleDateString()}
                             </div>
                             
+                            {/* Mobile Like/Bookmark Actions (Inserted here for mobile view) */}
+                            <div className="md:hidden flex items-center justify-end gap-4 mb-4">
+                                <LikeButton post={post} />
+                                <BookmarkButton post={post} />
+                            </div>
+
                             <p className="text-base md:text-lg text-gray-800 leading-relaxed font-medium whitespace-pre-wrap mb-8">
                                 {post.content}
                             </p>
@@ -286,3 +302,72 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
         </div>
     );
 };
+
+function LikeButton({ post }: { post: any }) {
+    const { user } = useAuth();
+    const [liked, setLiked] = useState(false);
+    const [likesCount, setLikesCount] = useState(post.likes_count || 0);
+
+    useEffect(() => {
+        if (user) {
+            supabaseService.getLikeStatus(user.id, post.id).then(setLiked);
+        }
+    }, [user, post.id]);
+
+    const handleToggle = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!user) return alert("Please sign in");
+        
+        // Optimistic UI
+        setLiked(!liked);
+        setLikesCount((prev: number) => liked ? prev - 1 : prev + 1);
+        
+        try {
+            const result = await supabaseService.toggleLike(user.id, post.id);
+            // Sync with server result just in case
+            setLikesCount(result.count);
+            setLiked(result.liked);
+        } catch (err) {
+            console.error(err);
+             // Revert logic would go here
+        }
+    };
+
+    return (
+        <button 
+            onClick={handleToggle}
+            className={`flex items-center gap-1.5 px-3 py-1.5 border-2 border-gray-900 shadow-[2px_2px_0px_0px_#000] active:translate-y-[2px] active:shadow-none transition-all ${liked ? 'bg-pink-100 text-pink-600' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+        >
+            <Heart size={18} fill={liked ? "currentColor" : "none"} strokeWidth={3} />
+            <span className="font-black text-sm">{likesCount}</span>
+        </button>
+    );
+}
+
+function BookmarkButton({ post }: { post: any }) {
+    const { user } = useAuth();
+    const [bookmarked, setBookmarked] = useState(false);
+
+    useEffect(() => {
+        if (user) {
+            supabaseService.getBookmarkStatus(user.id, post.id).then(setBookmarked);
+        }
+    }, [user, post.id]);
+
+    const handleToggle = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!user) return alert("Please sign in");
+        
+        setBookmarked(!bookmarked);
+        await supabaseService.toggleBookmark(user.id, post.id);
+    };
+
+    return (
+        <button 
+            onClick={handleToggle}
+            className={`p-1.5 border-2 border-gray-900 shadow-[2px_2px_0px_0px_#000] active:translate-y-[2px] active:shadow-none transition-all ${bookmarked ? 'bg-yellow-100 text-yellow-600' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+        >
+            <Bookmark size={20} fill={bookmarked ? "currentColor" : "none"} strokeWidth={3} />
+        </button>
+    );
+}

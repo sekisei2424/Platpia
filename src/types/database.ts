@@ -42,44 +42,41 @@ export type Database = {
             jobs: {
                 Row: {
                     id: string
-                    company_id: string
+                    user_id: string
                     title: string
-                    description: string | null
+                    description: string
+                    salary_range: string | null
                     location: string | null
-                    reward: string | null
-                    thumbnail_url: string | null
-                    status: 'open' | 'closed' | 'draft'
+                    type: string
                     created_at: string
                     updated_at: string
                 }
                 Insert: {
                     id?: string
-                    company_id: string
+                    user_id?: string
                     title: string
-                    description?: string | null
+                    description: string
+                    salary_range?: string | null
                     location?: string | null
-                    reward?: string | null
-                    thumbnail_url?: string | null
-                    status?: 'open' | 'closed' | 'draft'
+                    type: string
                     created_at?: string
                     updated_at?: string
                 }
                 Update: {
                     id?: string
-                    company_id?: string
+                    user_id?: string
                     title?: string
-                    description?: string | null
+                    description?: string
+                    salary_range?: string | null
                     location?: string | null
-                    reward?: string | null
-                    thumbnail_url?: string | null
-                    status?: 'open' | 'closed' | 'draft'
+                    type?: string
                     created_at?: string
                     updated_at?: string
                 }
                 Relationships: [
                     {
-                        foreignKeyName: "jobs_company_id_fkey"
-                        columns: ["company_id"]
+                        foreignKeyName: "jobs_user_id_fkey"
+                        columns: ["user_id"]
                         referencedRelation: "profiles"
                         referencedColumns: ["id"]
                     }
@@ -250,6 +247,74 @@ export type Database = {
                         foreignKeyName: "conversation_participants_user_id_fkey"
                         columns: ["user_id"]
                         referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            likes: {
+                Row: {
+                    id: number
+                    user_id: string
+                    post_id: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: number
+                    user_id: string
+                    post_id: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: number
+                    user_id?: string
+                    post_id?: string
+                    created_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "likes_user_id_fkey"
+                        columns: ["user_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "likes_post_id_fkey"
+                        columns: ["post_id"]
+                        referencedRelation: "plaza_posts"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            bookmarks: {
+                Row: {
+                    id: number
+                    user_id: string
+                    post_id: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: number
+                    user_id: string
+                    post_id: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: number
+                    user_id?: string
+                    post_id?: string
+                    created_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "bookmarks_user_id_fkey"
+                        columns: ["user_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "bookmarks_post_id_fkey"
+                        columns: ["post_id"]
+                        referencedRelation: "plaza_posts"
                         referencedColumns: ["id"]
                     }
                 ]
