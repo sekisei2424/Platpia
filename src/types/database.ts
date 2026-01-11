@@ -42,41 +42,44 @@ export type Database = {
             jobs: {
                 Row: {
                     id: string
-                    user_id: string
+                    company_id: string
                     title: string
-                    description: string
-                    salary_range: string | null
+                    description: string | null
+                    reward: string | null
                     location: string | null
-                    type: string
+                    thumbnail_url: string | null
+                    status: string
                     created_at: string
                     updated_at: string
                 }
                 Insert: {
                     id?: string
-                    user_id?: string
+                    company_id: string
                     title: string
-                    description: string
-                    salary_range?: string | null
+                    description?: string | null
+                    reward?: string | null
                     location?: string | null
-                    type: string
+                    thumbnail_url?: string | null
+                    status?: string
                     created_at?: string
                     updated_at?: string
                 }
                 Update: {
                     id?: string
-                    user_id?: string
+                    company_id?: string
                     title?: string
-                    description?: string
-                    salary_range?: string | null
+                    description?: string | null
+                    reward?: string | null
                     location?: string | null
-                    type?: string
+                    thumbnail_url?: string | null
+                    status?: string
                     created_at?: string
                     updated_at?: string
                 }
                 Relationships: [
                     {
-                        foreignKeyName: "jobs_user_id_fkey"
-                        columns: ["user_id"]
+                        foreignKeyName: "jobs_company_id_fkey"
+                        columns: ["company_id"]
                         referencedRelation: "profiles"
                         referencedColumns: ["id"]
                     }
