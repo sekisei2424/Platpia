@@ -138,6 +138,11 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
 
     if (!post) return null;
 
+    // Normalize data (handle both flat structure and nested profiles structure)
+    const username = post.username || post.profiles?.username || 'Unknown';
+    const avatarType = post.avatar_type || post.profiles?.avatar_type || post.avatarPath;
+    const userType = post.user_type || post.profiles?.user_type || 'individual';
+
     return (
         <div 
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm font-pixel" 
@@ -165,8 +170,9 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                 )}
 
                 <div 
-                    className="bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row border-4 border-gray-900 shadow-[8px_8px_0px_0px_#000] relative z-50 mx-4 md:mx-0"
+                    className="bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row border-4 border-gray-900 shadow-[8px_8px_0px_0px_#000] relative z-50 mx-4 md:mx-0 pointer-events-auto"
                     onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
                 >
                     {/* Close Button (Mobile Only: Absolute Top-Right) */}
                     <button 
@@ -184,20 +190,20 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                     <div className="absolute bottom-0 right-0 w-4 h-4 border-l-4 border-t-4 border-gray-900 bg-white z-20"></div>
 
                     {/* Left Side: Avatar & Basic Info */}
-                    <div className="w-full md:w-1/3 bg-green-50/50 md:border-r-4 border-gray-900 p-6 flex flex-col items-center justify-center relative shrink-0">
+                    <div className="w-full md:w-1/3 bg-green-50/50 md:border-r-4 border-gray-900 p-4 md:p-6 flex flex-col items-center justify-center relative shrink-0">
                         <div className="absolute top-0 left-0 w-full h-full opacity-10 pattern-dots pointer-events-none"></div>
                         
                         {/* User Badge */}
                         <div className="absolute top-4 left-4 bg-white border-2 border-gray-900 px-2 py-1 shadow-[2px_2px_0px_0px_#000]">
                              <span className="text-xs font-black text-gray-900 uppercase">
-                                 {post.user_type === 'company' ? 'CORP' : 'USER'}
+                                 {userType === 'company' ? 'CORP' : 'USER'}
                              </span>
                         </div>
 
-                        <div className="w-32 h-32 md:w-56 md:h-56 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] rounded-full overflow-hidden mb-4 md:mb-6 relative group cursor-pointer" onClick={handleAvatarClick}>
+                        <div className="w-20 h-20 md:w-56 md:h-56 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] rounded-full overflow-hidden mb-3 md:mb-6 relative group cursor-pointer" onClick={handleAvatarClick}>
                             <img
-                                src={getAvatarUrl(post.avatar_type || post.avatarPath)}
-                                alt={post.username}
+                                src={getAvatarUrl(avatarType)}
+                                alt={username}
                                 className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
                                 onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
@@ -206,11 +212,11 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                             />
                         </div>
                         
-                        <h2 className="text-xl md:text-2xl font-black text-gray-900 text-center mb-2 tracking-tight">
-                            {post.username}
+                        <h2 className="text-lg md:text-2xl font-black text-gray-900 text-center mb-2 tracking-tight">
+                            {username}
                         </h2>
                         
-                        <div className="flex gap-2 mt-4">
+                        <div className="flex gap-2 mt-2 md:mt-4">
                             {(!user || user.id !== post.user_id) && (
                                 <button 
                                     onClick={handleMessage}
@@ -248,18 +254,18 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                         </div>
 
                         {/* Scrollable Content */}
-                        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
-                            <div className="mb-2 text-xs font-bold text-gray-400 uppercase tracking-widest pt-12 md:pt-0 pl-10 md:pl-0">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+                            <div className="mb-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
                                 {new Date(post.created_at || Date.now()).toLocaleDateString()}
                             </div>
                             
                             {/* Mobile Like/Bookmark Actions (Inserted here for mobile view) */}
-                            <div className="md:hidden flex items-center justify-end gap-4 mb-4">
+                            <div className="md:hidden flex items-center justify-center gap-8 mb-4 border-t-2 border-b-2 border-gray-100 py-2">
                                 <LikeButton post={post} />
                                 <BookmarkButton post={post} />
                             </div>
 
-                            <p className="text-base md:text-lg text-gray-800 leading-relaxed font-medium whitespace-pre-wrap mb-8">
+                            <p className="text-base md:text-lg text-gray-800 leading-relaxed font-medium whitespace-pre-wrap mb-4 md:mb-8">
                                 {post.content}
                             </p>
 

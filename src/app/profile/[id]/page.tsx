@@ -263,28 +263,29 @@ export default function UserProfilePage() {
                         </div>
 
                          {/* Tabs */}
-                        <div className="sticky top-0 z-20 bg-white px-6 md:px-8 pt-2">
-                            <div className="flex border-b-4 border-gray-900 mb-8 bg-white">
+                        <div className="sticky top-0 z-20 bg-white px-0 md:px-8 pt-2">
+                             {/* Mobile: Tighter padding, smaller text */}
+                            <div className="flex border-b-4 border-gray-900 mb-8 bg-white overflow-x-auto scrollbar-hide">
                                 <button 
                                     onClick={() => setActiveTab('posts')}
-                                    className={`flex-1 py-4 font-black transition-colors flex items-center justify-center gap-2 border-r-2 border-gray-100 ${activeTab === 'posts' ? 'bg-gray-900 text-white' : 'hover:bg-gray-50 text-gray-400'}`}
+                                    className={`flex-1 min-w-[100px] md:min-w-0 py-3 md:py-4 font-black transition-colors flex items-center justify-center gap-2 border-r-2 border-gray-100 uppercase text-xs md:text-base ${activeTab === 'posts' ? 'bg-gray-900 text-white' : 'hover:bg-gray-50 text-gray-400'}`}
                                 >
                                     <span>POSTS</span>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full border ${activeTab === 'posts' ? 'bg-white text-gray-900 border-gray-900' : 'bg-gray-200 text-gray-500 border-transparent'}`}>{posts.length}</span>
+                                    <span className={`text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 rounded-full border ${activeTab === 'posts' ? 'bg-white text-gray-900 border-gray-900' : 'bg-gray-200 text-gray-500 border-transparent'}`}>{posts.length}</span>
                                 </button>
                                 {isOwnProfile && (
                                     <button 
                                         onClick={() => setActiveTab('bookmarks')}
-                                        className={`flex-1 py-4 font-black transition-colors flex items-center justify-center gap-2 border-r-2 border-gray-100 ${activeTab === 'bookmarks' ? 'bg-gray-900 text-white' : 'hover:bg-gray-50 text-gray-400'}`}
+                                        className={`flex-1 min-w-[120px] md:min-w-0 py-3 md:py-4 font-black transition-colors flex items-center justify-center gap-1 md:gap-2 border-r-2 border-gray-100 uppercase text-xs md:text-base ${activeTab === 'bookmarks' ? 'bg-gray-900 text-white' : 'hover:bg-gray-50 text-gray-400'}`}
                                     >
-                                        <Bookmark size={18} />
+                                        <Bookmark size={14} className="md:w-[18px] md:h-[18px]" />
                                         <span>BOOKMARKS</span>
                                     </button>
                                 )}
                                 {isOwnProfile && (
                                     <button 
                                         onClick={() => setActiveTab('memories')}
-                                        className={`flex-1 py-4 font-black transition-colors flex items-center justify-center gap-2 ${activeTab === 'memories' ? 'bg-gray-900 text-white' : 'hover:bg-gray-50 text-gray-400'}`}
+                                        className={`flex-1 min-w-[100px] md:min-w-0 py-3 md:py-4 font-black transition-colors flex items-center justify-center gap-1 md:gap-2 uppercase text-xs md:text-base ${activeTab === 'memories' ? 'bg-gray-900 text-white' : 'hover:bg-gray-50 text-gray-400'}`}
                                     >
                                         <span>MEMORIES</span>
                                     </button>
