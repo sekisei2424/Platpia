@@ -28,7 +28,7 @@ export class PlazaScene extends Scene {
     preload() {
         // Load assets
         if (!this.textures.exists('background')) {
-            this.load.image('background', '/images/hiroba.png');
+            this.load.image('background', '/images/Square.png');
         }
 
         const avatars = [
@@ -61,16 +61,11 @@ export class PlazaScene extends Scene {
         // Scale background to cover the screen (cover mode)
         this.updateBackgroundScale(width, height);
 
-        // Set Physics Bounds to bottom half (sky is top half)
-        this.physics.world.setBounds(0, height / 2, width, height / 2);
-
         // 2. Handle Resize
         this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
             if (this.cameras && this.cameras.main) {
                 this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
                 this.updateBackgroundScale(gameSize.width, gameSize.height);
-                // Update physics bounds on resize
-                this.physics.world.setBounds(0, gameSize.height / 2, gameSize.width, gameSize.height / 2);
             }
         });
 
@@ -161,14 +156,10 @@ export class PlazaScene extends Scene {
     }
 
     private createNPC(post: PostData) {
-        // Determine spawn position (random within lower half bounds)
-        const width = this.scale.width;
-        const height = this.scale.height;
-        const padding = 50;
-
-        const startX = Phaser.Math.Between(padding, width - padding);
-        // Spawn ONLY in the bottom half (height/2 to height)
-        const startY = Phaser.Math.Between(height / 2 + padding, height - padding);
+        // Determine spawn position (random within bounds)
+        // Plaza is roughly 800x600, let's spawn in the middle area
+        const startX = Phaser.Math.Between(100, 700);
+        const startY = Phaser.Math.Between(100, 500);
 
         // Select avatar sprite based on avatar_type
         const avatarInfo = this.getAvatarInfo(post.avatar_type);
