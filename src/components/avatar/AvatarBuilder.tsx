@@ -202,53 +202,64 @@ export default function AvatarBuilder({ onSaved }: AvatarBuilderProps) {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Canvas Display */}
-            <div className="flex justify-center">
-                <canvas
-                    ref={canvasRef}
-                    width={256}
-                    height={256}
-                    className="border-2 border-white/20 rounded-lg bg-gradient-to-br from-gray-800 to-gray-900"
-                />
+        <div className="w-full h-full bg-white border-2 border-gray-900 flex flex-col md:flex-row gap-6 p-6 font-pixel text-gray-900">
+            {/* Left: Canvas Preview */}
+            <div className="md:w-3/5 flex flex-col items-center justify-center">
+                <div className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-4">Preview</div>
+                <div className="relative bg-white border-2 border-gray-900 rounded-lg p-6 shadow-[4px_4px_0px_rgba(0,0,0,0.1)]">
+                    <canvas
+                        ref={canvasRef}
+                        width={256}
+                        height={256}
+                        className="border-2 border-gray-900 rounded-lg bg-gray-100 image-rendering-pixelated"
+                    />
+                </div>
             </div>
 
-            {/* Part Selectors */}
-            <div className="space-y-4">
-                {(['Body', 'Clothes', 'Eyes', 'Hair', 'Mouth'] as PartType[]).map((partType) => (
-                    <div key={partType}>
-                        <label className="block text-xs font-medium text-white/60 mb-2 uppercase">
-                            {partType}
-                        </label>
-                        <select
-                            value={selectedParts[partType]}
-                            onChange={(e) =>
-                                setSelectedParts((prev) => ({
-                                    ...prev,
-                                    [partType]: e.target.value,
-                                }))
-                            }
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-white/30 transition-colors"
-                        >
-                            <option value="">Select {partType}</option>
-                            {partOptions[partType].map((option) => (
-                                <option key={option} value={option}>
-                                    {option.replace(/\.[^/.]+$/, '')}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                ))}
-            </div>
+            {/* Right: Part Selectors */}
+            <div className="md:w-2/5 flex flex-col">
+                <div className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-4">Customize</div>
+                
+                <div className="flex-grow overflow-y-auto space-y-3 pr-2">
+                    {(['Body', 'Clothes', 'Eyes', 'Hair', 'Mouth'] as PartType[]).map((partType) => (
+                        <div key={partType} className="bg-white border-2 border-gray-900 p-4 rounded-lg shadow-[2px_2px_0px_rgba(0,0,0,0.1)]">
+                            <label className="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">
+                                {partType}
+                            </label>
+                            <select
+                                value={selectedParts[partType]}
+                                onChange={(e) =>
+                                    setSelectedParts((prev) => ({
+                                        ...prev,
+                                        [partType]: e.target.value,
+                                    }))
+                                }
+                                className="w-full bg-white border-2 border-gray-900 px-3 py-2 text-gray-900 text-xs font-bold focus:outline-none focus:bg-green-50/50 transition-colors rounded cursor-pointer shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)]"
+                            >
+                                <option value="">None</option>
+                                {partOptions[partType].map((option) => (
+                                    <option key={option} value={option}>
+                                        {option.replace(/\.[^/.]+$/, '')}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    ))}
+                </div>
 
-            {/* Save Button */}
-            <div className="flex gap-2">
+                {/* Save Button */}
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex-1 px-4 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`
+                        w-full mt-4 px-4 py-3 border-2 border-gray-900 font-bold transition-all text-sm uppercase tracking-widest
+                        ${saving 
+                            ? "bg-gray-400 text-gray-700 opacity-50 cursor-not-allowed shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)]" 
+                            : "bg-gray-900 text-white shadow-[inset_-2px_-2px_0px_rgba(50,50,50,1),3px_3px_0px_#000] hover:bg-gray-800 active:shadow-none active:translate-y-[3px]"
+                        }
+                    `}
                 >
-                    {saving ? 'Saving...' : 'Save Avatar'}
+                    {saving ? '保存中...' : 'Save Avatar'}
                 </button>
             </div>
         </div>

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
 import PostForm from '@/components/ui/PostForm';
 import Modal from '@/components/ui/Modal';
 import JobBoard from '@/components/ui/JobBoard'; 
 import { Search as SearchIcon, Filter, MapPin, Briefcase } from 'lucide-react';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 const industries = [
   "農業", "林業", "漁業", 
@@ -28,6 +30,14 @@ const areaToPrefecture: { [key: string]: string[] } = {
 
 export default function SearchPage() {
     const [isPostFormOpen, setIsPostFormOpen] = useState(false);
+    const { user, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push('/auth');
+        }
+    }, [user, loading, router]);
     const [keyword, setKeyword] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
