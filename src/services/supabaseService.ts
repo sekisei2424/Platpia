@@ -20,6 +20,47 @@ export type JobApplication = Database['public']['Tables']['job_applications']['R
 };
 
 export const supabaseService = {
+    // Fetch latest posts per user to avoid duplicate avatars in Plaza
+    async fetchLatestPostsPerUser(): Promise<Post[]> {
+        // Fetch posts normally (ordered by created_at desc)
+        // Since we can't easily do DISTINCT ON in Supabase client without a raw query or RPC in some cases,
+        // we'll fetch a slightly larger batch and filter in JS for this use case.
+        // Assuming the active user base isn't massive yet.
+        const { data, error } = await supabase
+            .from('plaza_posts')
+            .select(`
+                *,
+                profiles (
+                    username,
+                    avatar_type,
+                    user_type
+                ),
+                jobs (
+                    title
+                )
+            `)
+            .order('created_at', { ascending: false })
+            .limit(50); // Fetch more to increase chance of finding unique users
+
+        if (error) {
+            console.error('Error fetching latest posts:', error);
+            return [];
+        }
+
+        // Filter to keep only the first (latest) post per user_id
+        const uniquePostsMap = new Map<string, Post>();
+        const posts = data as Post[];
+        
+        for (const post of posts) {
+            if (!uniquePostsMap.has(post.user_id)) {
+                uniquePostsMap.set(post.user_id, post);
+            }
+        }
+        
+        // Return values array, limited to maybe 20 to not overcrowd the plaza
+        return Array.from(uniquePostsMap.values()).slice(0, 20);
+    },
+
     // Fetch posts with profile information
     async fetchPosts(): Promise<Post[]> {
         const { data, error } = await supabase

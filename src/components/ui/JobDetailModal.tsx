@@ -6,6 +6,7 @@ import { MapPin, Gift, User, X, ClipboardList, Check, AlertCircle } from 'lucide
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabaseService } from '@/services/supabaseService';
 import { supabase } from '@/lib/supabase/client';
+import { getAvatarUrl } from '@/lib/avatar';
 
 type Job = Database['public']['Tables']['jobs']['Row'];
 type Applicant = Database['public']['Tables']['job_applications']['Row'] & {
@@ -96,90 +97,60 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
     if (!isOpen || !job) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-600/40 backdrop-blur-sm font-pixel" onClick={onClose}>
-            <div
-                className={`
-                    relative w-full ${isOwner ? 'max-w-5xl' : 'max-w-2xl'} 
-                    bg-white flex flex-col max-h-[85vh]
-                    border-2 border-gray-600 shadow-[4px_4px_0px_0px_#9ca3af]
-                `}
-                onClick={e => e.stopPropagation()}
+        <div 
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-gray-600/40 backdrop-blur-sm font-pixel" 
+            onClick={onClose}
+            onMouseDown={(e) => e.stopPropagation()} 
+            onPointerDown={(e) => e.stopPropagation()}
+        >
+            <div 
+                className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto border-4 border-gray-900 shadow-[8px_8px_0px_0px_#000] p-6 relative z-[71]" 
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()} 
+                onPointerDown={(e) => e.stopPropagation()}
             >
-                 <div className="absolute top-1 left-1 w-1 h-1 bg-gray-400 z-30"></div>
-                 <div className="absolute top-1 right-1 w-1 h-1 bg-gray-400 z-30"></div>
-                 <div className="absolute bottom-1 left-1 w-1 h-1 bg-gray-400 z-30"></div>
-                 <div className="absolute bottom-1 right-1 w-1 h-1 bg-gray-400 z-30"></div>
+                <button 
+                    onClick={onClose}
+                    className="absolute top-4 right-4 z-10 p-2 bg-white border-2 border-gray-900 shadow-[2px_2px_0px_0px_#000] active:translate-y-0.5 active:shadow-none text-gray-900 hover:bg-red-50"
+                >
+                    <X size={20} strokeWidth={3} />
+                </button>
 
-                <div className="flex justify-between items-center px-5 py-3 border-b-2 border-gray-600 bg-white sticky top-0 z-20">
-                    <div className="flex items-center gap-2">
-                        <div className="bg-gray-700 text-white p-1">
-                            <ClipboardList size={18} strokeWidth={2} />
-                        </div>
-                        <h2 className="text-base font-black text-gray-800 tracking-tight">
-                            募集詳細
+                <div className="flex flex-col gap-4 mt-8">
+                    <div className="flex items-center justify-between pr-12">
+                        <h2 className="text-xl font-extrabold text-gray-800">
+                            {job.title}
                         </h2>
+                        <span className={`
+                            inline-block text-xs px-3 py-1 font-black rounded-full shrink-0 ml-4
+                            ${job.status === 'open' 
+                                ? 'bg-red-600 text-white shadow-[2px_2px_0px_0px_#000]' 
+                                : 'bg-gray-300 text-gray-600'}
+                        `}>
+                            {job.status === 'open' ? '募集中' : '募集終了'}
+                        </span>
                     </div>
 
-                    <button
-                        onClick={onClose}
-                        className="p-1 hover:bg-gray-700 hover:text-white transition-all text-gray-600 border-2 border-transparent hover:border-gray-700 rounded-none"
-                    >
-                        <X size={20} strokeWidth={2.5} />
-                    </button>
-                </div>
-
-                <div className="flex flex-col md:flex-row flex-1 overflow-hidden bg-gray-50">
-
-                    <div className="flex-1 overflow-y-auto p-5 md:p-6 custom-scrollbar">
-                        <div className="space-y-6">
-
-                            <div>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <span className={`
-                                        inline-block border-2 text-xs px-3 py-1 font-black shadow-sm
-                                        ${job.status === 'open' 
-                                            ? 'bg-red-600 text-white border-gray-600' 
-                                            : 'bg-gray-300 text-gray-600 border-gray-400'}
-                                    `}>
-                                        {job.status === 'open' ? '募集中' : '募集終了'}
-                                    </span>
-                                    
-                                    <span className="text-[10px] font-mono text-gray-400 font-bold">
-                                        ID: {job.id.slice(0, 8)}
-                                    </span>
-                                </div>
-                                <h1 className="text-2xl font-black text-gray-800 leading-tight">
-                                    {job.title}
-                                </h1>
-                            </div>
-
-                            <div className="space-y-4">
-                                {job.thumbnail_url && (
-                                    <div className="w-full aspect-video bg-white border-2 border-gray-600 shadow-[3px_3px_0px_0px_#cbd5e1] overflow-hidden relative">
-                                        <img
-                                            src={job.thumbnail_url}
-                                            alt={job.title}
-                                            className="w-full h-full object-cover"
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-1 bg-gray-50 p-4 rounded-lg border-2 border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-300">
+                                    {ownerProfile?.avatar_type ? (
+                                        <img 
+                                            src={getAvatarUrl(ownerProfile.avatar_type)} 
+                                            alt="Owner" 
+                                            className="w-full h-full object-cover object-top" 
                                         />
-                                        <div className="absolute inset-0 bg-black opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '4px 4px' }}></div>
-                                    </div>
-                                )}
-
-                                <div className="bg-white p-3 border-2 border-gray-600 shadow-[2px_2px_0px_0px_#e5e7eb] flex items-center gap-3">
-                                    <div className="w-10 h-10 border-2 border-gray-600 bg-gray-100 flex-shrink-0 overflow-hidden rounded-full">
-                                        {ownerProfile?.avatar_type ? (
-                                            <img src={`/images/${ownerProfile.avatar_type}`} alt="Owner" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">
-                                                {ownerProfile?.username?.[0] || '?'}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <div className="text-[10px] text-gray-400 font-bold">掲載者</div>
-                                        <div className="text-sm font-black text-gray-700">
-                                            {ownerProfile?.username || '不明なユーザー'}
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">
+                                            {ownerProfile?.username?.[0] || '?'}
                                         </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <div className="text-xs font-black text-gray-400">掲載者</div>
+                                    <div className="text-sm font-bold text-gray-800">
+                                        {ownerProfile?.username || '不明なユーザー'}
                                     </div>
                                 </div>
                             </div>
@@ -231,84 +202,84 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
                                 </div>
                             )}
                         </div>
-                    </div>
 
-                    {/* Right Column (Owner Only) */}
-                    {isOwner && (
-                        <div className="w-full md:w-80 border-t-2 md:border-t-0 md:border-l-2 border-gray-600 bg-white flex flex-col h-full">
-                            <div className="p-3 border-b-2 border-gray-600 bg-gray-50 flex justify-between items-center">
-                                <h3 className="font-black text-gray-700 text-xs flex items-center gap-2">
-                                    <User size={16} strokeWidth={2.5} /> 応募者一覧
-                                </h3>
-                                <span className="bg-gray-600 text-white text-[10px] px-2 py-0.5 font-bold border border-gray-600">{applicants.length}</span>
-                            </div>
+                        {/* Right Column (Owner Only) */}
+                        {isOwner && (
+                            <div className="w-full md:w-80 border-t-2 md:border-t-0 md:border-l-2 border-gray-600 bg-white flex flex-col h-full">
+                                <div className="p-3 border-b-2 border-gray-600 bg-gray-50 flex justify-between items-center">
+                                    <h3 className="font-black text-gray-700 text-xs flex items-center gap-2">
+                                        <User size={16} strokeWidth={2.5} /> 応募者一覧
+                                    </h3>
+                                    <span className="bg-gray-600 text-white text-[10px] px-2 py-0.5 font-bold border border-gray-600">{applicants.length}</span>
+                                </div>
 
-                            <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-gray-50">
-                                {applicants.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-300 m-2 font-bold">
-                                        <AlertCircle size={32} className="mx-auto mb-2 opacity-50" />
-                                        <p className="text-xs">まだ応募者はいません</p>
-                                    </div>
-                                ) : (
-                                    applicants.map(app => (
-                                        <div key={app.id} className="bg-white border-2 border-gray-600 p-3 shadow-[2px_2px_0px_0px_#cbd5e1]">
-                                            <div className="flex items-center gap-2 mb-2 pb-2 border-b-2 border-gray-100">
-                                                <div className="w-8 h-8 border-2 border-gray-600 bg-gray-100 overflow-hidden shrink-0 rounded-full">
-                                                    {app.profiles?.avatar_type ? (
-                                                        <img src={`/images/${app.profiles.avatar_type}`} alt="Avatar" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                                            <User size={16} />
-                                                        </div>
+                                <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-gray-50">
+                                    {applicants.length === 0 ? (
+                                        <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-300 m-2 font-bold">
+                                            <AlertCircle size={32} className="mx-auto mb-2 opacity-50" />
+                                            <p className="text-xs">まだ応募者はいません</p>
+                                        </div>
+                                    ) : (
+                                        applicants.map(app => (
+                                            <div key={app.id} className="bg-white border-2 border-gray-600 p-3 shadow-[2px_2px_0px_0px_#cbd5e1]">
+                                                <div className="flex items-center gap-2 mb-2 pb-2 border-b-2 border-gray-100">
+                                                    <div className="w-8 h-8 border-2 border-gray-600 bg-gray-100 overflow-hidden shrink-0 rounded-full">
+                                                        {app.profiles?.avatar_type ? (
+                                                            <img src={`/images/${app.profiles.avatar_type}`} alt="Avatar" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                                <User size={16} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-black text-xs text-gray-800 truncate">{app.profiles?.username || '名称未設定'}</p>
+                                                        <span className={`inline-block text-[9px] px-1.5 py-0.5 font-black border-2 mt-1 rounded-none ${
+                                                            app.status === 'completed' ? 'bg-green-100 text-green-800 border-green-700' :
+                                                            app.status === 'approved' ? 'bg-blue-100 text-blue-800 border-blue-700' :
+                                                            app.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-700' :
+                                                                    'bg-gray-100 text-gray-600 border-gray-400'
+                                                        }`}>
+                                                            {app.status === 'pending' ? '検討中' :
+                                                                app.status === 'approved' ? '進行中' :
+                                                                    app.status === 'completed' ? '完了' : '見送り'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex gap-1.5">
+                                                    {app.status === 'pending' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(app.id, 'approved')}
+                                                                className="flex-1 py-1 bg-gray-700 text-white text-[9px] font-black border-2 border-gray-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-700 active:translate-y-[1px] transition-all"
+                                                            >
+                                                                承認
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(app.id, 'rejected')}
+                                                                className="flex-1 py-1 bg-white text-gray-600 text-[9px] font-black border-2 border-gray-600 hover:bg-gray-200 active:translate-y-[1px] transition-all"
+                                                            >
+                                                                見送り
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {app.status === 'approved' && (
+                                                        <button
+                                                            onClick={() => handleStatusUpdate(app.id, 'completed')}
+                                                            className="w-full py-1 bg-blue-500 text-white text-[9px] font-black border-2 border-blue-600 hover:bg-blue-400 active:translate-y-[1px] transition-all"
+                                                        >
+                                                            完了を記録
+                                                        </button>
                                                     )}
                                                 </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="font-black text-xs text-gray-800 truncate">{app.profiles?.username || '名称未設定'}</p>
-                                                    <span className={`inline-block text-[9px] px-1.5 py-0.5 font-black border-2 mt-1 rounded-none ${
-                                                        app.status === 'completed' ? 'bg-green-100 text-green-800 border-green-700' :
-                                                        app.status === 'approved' ? 'bg-blue-100 text-blue-800 border-blue-700' :
-                                                        app.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-700' :
-                                                                'bg-gray-100 text-gray-600 border-gray-400'
-                                                    }`}>
-                                                        {app.status === 'pending' ? '検討中' :
-                                                            app.status === 'approved' ? '進行中' :
-                                                                app.status === 'completed' ? '完了' : '見送り'}
-                                                    </span>
-                                                </div>
                                             </div>
-
-                                            <div className="flex gap-1.5">
-                                                {app.status === 'pending' && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => handleStatusUpdate(app.id, 'approved')}
-                                                            className="flex-1 py-1 bg-gray-700 text-white text-[9px] font-black border-2 border-gray-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-700 active:translate-y-[1px] transition-all"
-                                                        >
-                                                            承認
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleStatusUpdate(app.id, 'rejected')}
-                                                            className="flex-1 py-1 bg-white text-gray-600 text-[9px] font-black border-2 border-gray-600 hover:bg-gray-200 active:translate-y-[1px] transition-all"
-                                                        >
-                                                            見送り
-                                                        </button>
-                                                    </>
-                                                )}
-                                                {app.status === 'approved' && (
-                                                    <button
-                                                        onClick={() => handleStatusUpdate(app.id, 'completed')}
-                                                        className="w-full py-1 bg-blue-500 text-white text-[9px] font-black border-2 border-blue-600 hover:bg-blue-400 active:translate-y-[1px] transition-all"
-                                                    >
-                                                        完了を記録
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
+                                        ))
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

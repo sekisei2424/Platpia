@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { supabaseService } from '@/services/supabaseService';
 import { useRouter } from 'next/navigation';
 import JobDetailModal from './JobDetailModal';
+import { getAvatarUrl } from '@/lib/avatar';
 
 interface PostDetailModalProps {
     post: any;
@@ -26,6 +27,20 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
             return;
         }
         if (user.id === post.id) return; 
+
+        // Start conversation logic
+        try {
+            const targetUserId = post.user_id;
+            if (!targetUserId) return;
+            
+            const convo = await supabaseService.createConversation(user.id, targetUserId);
+            // Close modal and navigate
+            onClose();
+            router.push(`/messages/${convo.id}`);
+        } catch (error) {
+            console.error('Error starting conversation:', error);
+            alert('Could not start conversation');
+        }
     };
 
     const startConversation = async () => {
@@ -46,7 +61,8 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
         }
     };
 
-    const handleJobClick = async () => {
+    const handleJobClick = async (e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
         if (post.job_id) {
             try {
                 const job = await supabaseService.fetchJob(post.job_id);
@@ -113,151 +129,160 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
         }
     };
 
+    if (!post) return null;
+
     return (
-        <>
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm font-pixel" 
+            onClick={onClose}
+            onMouseDown={(e) => e.stopPropagation()} 
+            onPointerDown={(e) => e.stopPropagation()}
+        >
             <div 
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
+                className="relative flex items-center justify-center pointer-events-none md:pointer-events-auto w-full max-w-4xl"
             >
-                {/* Backdrop to close */}
-                <div
-                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onClose();
-                    }}
-                />
+                {/* Left Navigation Button - Relative to Modal */}
+                {onPrev && (
+                    <button 
+                        onClick={(e) => { 
+                            e.stopPropagation(); 
+                            onPrev(); 
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        className="pointer-events-auto absolute left-2 lg:-left-14 top-1/2 -translate-y-1/2 z-[60] p-3 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_#000] hover:bg-gray-100 active:shadow-none transition-all rounded-lg flex items-center justify-center w-12 h-12 md:w-auto md:h-auto"
+                        aria-label="Previous"
+                    >
+                        <ChevronLeft size={24} strokeWidth={3} className="text-gray-900 md:w-8 md:h-8" />
+                    </button>
+                )}
 
-                <div className="relative w-full h-full flex flex-col md:flex-row gap-4 md:gap-8 pointer-events-none justify-center items-center">
-                    {/* Avatar (Bottom Left on Desktop, Hidden on Mobile for space) */}
-                    <div className="hidden md:block mt-auto pointer-events-auto animate-in zoom-in-50 fade-in duration-300 z-50">
-                        <div
-                            className="w-64 h-64 lg:w-80 lg:h-80 rounded-3xl shadow-2xl border-8 border-white flex items-center justify-center transform hover:scale-105 transition-transform overflow-hidden bg-white"
-                        >
-                            {post.avatarPath ? (
-                                <img
-                                    src={post.avatarPath}
-                                    alt={post.username}
-                                    className="w-full h-full object-contain p-4"
-                                />
-                            ) : (
-                                <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
-                                    No Image
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                <div 
+                    className="pointer-events-auto bg-white w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row border-4 border-gray-900 shadow-[8px_8px_0px_0px_#000] relative z-50 mx-4 md:mx-0"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* Close Button (Mobile Only: Absolute Top-Right) */}
+                    <button 
+                        onClick={onClose}
+                        className="md:hidden absolute top-2 right-2 z-[70] p-2 bg-white border-2 border-gray-900 shadow-[2px_2px_0px_0px_#000] active:translate-y-0.5 active:shadow-none text-gray-900"
+                        aria-label="Close"
+                    >
+                        <X size={20} strokeWidth={3} />
+                    </button>
+                    
+                    {/* Decorative Corners */}
+                    <div className="absolute top-0 left-0 w-4 h-4 border-r-4 border-b-4 border-gray-900 bg-white z-20"></div>
+                    <div className="hidden md:block absolute top-0 right-0 w-4 h-4 border-l-4 border-b-4 border-gray-900 bg-white z-20"></div>
+                    <div className="absolute bottom-0 left-0 w-4 h-4 border-r-4 border-t-4 border-gray-900 bg-white z-20"></div>
+                    <div className="absolute bottom-0 right-0 w-4 h-4 border-l-4 border-t-4 border-gray-900 bg-white z-20"></div>
 
-                    {/* Content (Right Side - Larger) */}
-                    <div className="flex-grow w-full md:w-auto h-full md:h-auto flex items-center justify-center pointer-events-auto animate-in zoom-in-95 fade-in duration-200">
+                    {/* Left Side: Avatar & Basic Info */}
+                    <div className="w-full md:w-1/3 bg-green-50/50 md:border-r-4 border-gray-900 p-6 flex flex-col items-center justify-center relative shrink-0">
+                        <div className="absolute top-0 left-0 w-full h-full opacity-10 pattern-dots pointer-events-none"></div>
                         
-                        <div className="relative w-full max-w-4xl h-full md:h-[80vh]">
-                            {/* Navigation Buttons */}
-                            {onPrev && (
+                        {/* User Badge */}
+                        <div className="absolute top-4 left-4 bg-white border-2 border-gray-900 px-2 py-1 shadow-[2px_2px_0px_0px_#000]">
+                             <span className="text-xs font-black text-gray-900 uppercase">
+                                 {post.user_type === 'company' ? 'CORP' : 'USER'}
+                             </span>
+                        </div>
+
+                        <div className="w-32 h-32 md:w-56 md:h-56 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] rounded-full overflow-hidden mb-4 md:mb-6 relative group">
+                            <img
+                                src={getAvatarUrl(post.avatar_type || post.avatarPath)}
+                                alt={post.username}
+                                className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (e.target as HTMLImageElement).parentElement!.innerText = 'No Image';
+                                }}
+                            />
+                        </div>
+                        
+                        <h2 className="text-xl md:text-2xl font-black text-gray-900 text-center mb-2 tracking-tight">
+                            {post.username}
+                        </h2>
+                        
+                        <div className="flex gap-2 mt-4">
+                            {(!user || user.id !== post.user_id) && (
                                 <button 
-                                    onClick={(e) => { e.stopPropagation(); onPrev(); }}
-                                    className="absolute left-2 xl:-left-16 top-1/2 transform -translate-y-1/2 p-2 md:p-4 bg-[#FDFBF7] border border-stone-200 rounded-full shadow-xl hover:bg-white hover:scale-110 transition-all z-50 text-gray-700"
-                                    aria-label="Previous post"
+                                    onClick={handleMessage}
+                                    className="p-3 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all shadow-[2px_2px_0px_0px_#000] active:translate-y-[2px] active:shadow-none"
+                                    title="Message"
                                 >
-                                    <ChevronLeft size={24} className="md:w-8 md:h-8" />
+                                    <MessageCircle size={20} />
                                 </button>
                             )}
-
-                            {onNext && (
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); onNext(); }}
-                                    className="absolute right-2 xl:-right-16 top-1/2 transform -translate-y-1/2 p-2 md:p-4 bg-[#FDFBF7] border border-stone-200 rounded-full shadow-xl hover:bg-white hover:scale-110 transition-all z-50 text-gray-700"
-                                    aria-label="Next post"
-                                >
-                                    <ChevronRight size={24} className="md:w-8 md:h-8" />
-                                </button>
-                            )}
-
-                            <div className="w-full h-full bg-[#FDFBF7] rounded-3xl shadow-2xl p-6 md:p-12 border border-stone-200 relative flex flex-col overflow-hidden">
+                            {post.job_id && (
                                 <button
-                                    onClick={onClose}
-                                    className="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-gray-800 transition-colors z-10"
+                                    onClick={handleJobClick}
+                                    className="px-4 py-2 bg-yellow-400 border-2 border-gray-900 text-gray-900 font-bold hover:bg-yellow-300 transition-all shadow-[2px_2px_0px_0px_#000] active:translate-y-[2px] active:shadow-none flex items-center gap-2"
                                 >
-                                    <X size={24} className="md:w-8 md:h-8" />
+                                    <Briefcase size={18} />
+                                    <span className="text-sm">案件を見る</span>
                                 </button>
-
-                                <div className="flex items-center gap-4 md:gap-6 mb-6 md:mb-8 border-b border-gray-100 pb-4 md:pb-6 flex-shrink-0">
-                                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full shadow-md overflow-hidden bg-gray-100 flex-shrink-0">
-                                        {post.avatarPath && (
-                                            <img
-                                                src={post.avatarPath}
-                                                alt={post.username}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        )}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h2 className="text-2xl md:text-4xl font-bold text-gray-800 truncate">{post.username}</h2>
-                                        <span className="text-gray-500 text-sm md:text-lg">Just now • Plaza</span>
-                                    </div>
-                                </div>
-
-                                <div className="prose prose-lg md:prose-xl max-w-none flex-grow overflow-y-auto pr-2 md:pr-4 custom-scrollbar">
-                                    <p className="text-lg md:text-2xl text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
-                                        {post.content}
-                                    </p>
-
-                                    {/* Post Image */}
-                                    {post.image_url && (
-                                        <div className="mt-4 md:mt-6 rounded-2xl overflow-hidden shadow-md">
-                                        <img 
-                                            src={post.image_url} 
-                                            alt="Post content" 
-                                            className="w-full h-auto object-cover max-h-60 md:max-h-96"
-                                        />
-                                    </div>
-                                )}
-                                
-                                {/* Job Attachment */}
-                                {post.job_id && (
-                                    <div 
-                                        onClick={handleJobClick}
-                                        className="mt-6 md:mt-8 p-4 md:p-6 bg-blue-50 rounded-2xl border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors group"
-                                    >
-                                        <div className="flex items-center gap-2 md:gap-3 mb-2 text-blue-600 font-bold">
-                                            <Briefcase size={20} className="md:w-6 md:h-6" />
-                                            <span className="text-sm md:text-base">関連する体験</span>
-                                        </div>
-                                        <h3 className="text-lg md:text-xl font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
-                                            {post.job_title || '体験の詳細を見る'}
-                                        </h3>
-                                        <p className="text-gray-500 mt-1 text-sm md:text-base">クリックして詳細を確認・応募する</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-100 flex gap-4 md:gap-6 flex-shrink-0">
-                                <button className="flex-1 py-3 md:py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold text-lg md:text-xl hover:bg-gray-200 transition-colors">
-                                    Like
-                                </button>
-                                {user && user.id !== post.user_id && (
-                                    <button
-                                        onClick={startConversation}
-                                        className="flex-1 py-3 md:py-4 bg-blue-500 text-white rounded-2xl font-bold text-lg md:text-xl shadow-lg hover:bg-blue-600 hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
-                                    >
-                                        <MessageCircle size={20} className="md:w-6 md:h-6" />
-                                        Message
-                                    </button>
-                                )}
-                            </div>
+                            )}
                         </div>
                     </div>
+
+                    {/* Right Side: Content */}
+                    <div className="flex-1 flex flex-col relative bg-white min-h-0">
+                        {/* Header Bar - Desktop Only */}
+                        <div className="hidden md:flex h-14 border-b-4 border-gray-900 items-center justify-end px-4 bg-gray-50 shrink-0">
+                            <button 
+                                onClick={onClose}
+                                className="w-8 h-8 flex items-center justify-center bg-red-500 text-white border-2 border-gray-900 hover:bg-red-600 shadow-[2px_2px_0px_0px_#000] active:translate-y-[2px] active:shadow-none transition-all"
+                            >
+                                <X size={20} strokeWidth={3} />
+                            </button>
+                        </div>
+
+                        {/* Scrollable Content */}
+                        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+                            <div className="mb-2 text-xs font-bold text-gray-400 uppercase tracking-widest pt-12 md:pt-0 pl-10 md:pl-0">
+                                {new Date(post.created_at || Date.now()).toLocaleDateString()}
+                            </div>
+                            
+                            <p className="text-base md:text-lg text-gray-800 leading-relaxed font-medium whitespace-pre-wrap mb-8">
+                                {post.content}
+                            </p>
+
+                            {post.image_url && (
+                                <div className="w-full border-4 border-gray-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] p-2 bg-white -rotate-1 hover:rotate-0 transition-transform duration-300">
+                                    <img 
+                                        src={post.image_url} 
+                                        alt="Post content" 
+                                        className="w-full h-auto max-h-80 object-cover border-2 border-gray-100"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
+
+                {/* Right Navigation Button - Relative to Modal */}
+                {onNext && (
+                    <button 
+                        onClick={(e) => { 
+                            e.stopPropagation(); 
+                            onNext(); 
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        className="pointer-events-auto absolute right-2 lg:-right-14 top-1/2 -translate-y-1/2 z-[60] p-3 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_#000] hover:bg-gray-100 active:shadow-none transition-all rounded-lg flex items-center justify-center w-12 h-12 md:w-auto md:h-auto"
+                        aria-label="Next"
+                    >
+                        <ChevronRight size={24} strokeWidth={3} className="text-gray-900 md:w-8 md:h-8" />
+                    </button>
+                )}
             </div>
 
             <JobDetailModal 
-                job={selectedJob} 
-                isOpen={isJobModalOpen} 
+                isOpen={isJobModalOpen}
+                job={selectedJob}
                 onClose={() => setIsJobModalOpen(false)}
                 onApply={handleApply}
             />
-        </>
+        </div>
     );
-}
+};

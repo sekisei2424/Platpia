@@ -7,6 +7,7 @@ import JobDetailModal from './JobDetailModal';
 import { MapPin, Gift, Search, Image as ImageIcon, ClipboardList, ChevronRight, Briefcase } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabaseService } from '@/services/supabaseService';
+import { getAvatarUrl } from '@/lib/avatar';
 
 type Job = Database['public']['Tables']['jobs']['Row'];
 type ProfileData = {
@@ -197,9 +198,9 @@ export default function JobBoard({ searchQuery = '', filterLocation = [], filter
                                     <div className="w-12 h-12 border-2 border-gray-900 bg-white flex-shrink-0 overflow-hidden rounded-full shadow-sm">
                                         {owner?.avatar_type ? (
                                             <img
-                                                src={`/images/${owner.avatar_type}`}
+                                                src={getAvatarUrl(owner.avatar_type)}
                                                 alt="Owner"
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-cover object-top"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xs bg-gray-200">?</div>
