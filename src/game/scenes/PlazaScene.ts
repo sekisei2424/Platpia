@@ -264,9 +264,79 @@ export class PlazaScene extends Scene {
         );
 
         // Click interaction for NPC
-        npc.setInteractive({ useHandCursor: true });
-        npc.on('pointerdown', () => {
-            this.game.events.emit('open_post', post);
+        npc.setInteractive({ useHandCursor: true, draggable: true });
+        
+        // Define drag state variables
+        let isDragging = false;
+        let dragStartTime = 0;
+        (npc as any).isBeingDragged = false;
+        let dangleTween: Phaser.Tweens.Tween | null = null;
+
+        npc.on('dragstart', (pointer: Phaser.Input.Pointer) => {
+            isDragging = true;
+            dragStartTime = Date.now();
+            (npc as any).isBeingDragged = true;
+            
+            // Stop physics
+            npc.setVelocity(0);
+            (npc.body as Phaser.Physics.Arcade.Body).moves = false;
+
+            // Visual Effect: Dangle / Swing
+            // Change origin to top-center to "hang"
+            // Note: Changing origin might jump the sprite content, so we might need counter-offset or just rotate around center
+            // Let's rotate around center for simplicity first to avoid position jumps
+            
+            dangleTween = this.tweens.add({
+                targets: npc,
+                angle: { from: -15, to: 15 },
+                duration: 400,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            // Slightly Lift up
+            npc.setScale(npc.scale * 1.1);
+        });
+
+        npc.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            npc.x = dragX;
+            npc.y = dragY;
+            
+            // Bubble will follow automatically via update() loop
+        });
+
+        npc.on('dragend', (pointer: Phaser.Input.Pointer) => {
+            isDragging = false;
+            (npc as any).isBeingDragged = false;
+            const dragDuration = Date.now() - dragStartTime;
+
+            // Re-enable physics
+            (npc.body as Phaser.Physics.Arcade.Body).moves = true;
+            
+            // Restore scale
+            npc.setScale(npc.scale / 1.1);
+
+            // Stop dangling
+            if (dangleTween) {
+                dangleTween.stop();
+                dangleTween = null;
+            }
+            // Reset angle
+            this.tweens.add({
+                targets: npc,
+                angle: 0,
+                duration: 200,
+                ease: 'Power1'
+            });
+
+            // If it was a short click (not a drag), treat as click
+            if (dragDuration < 200) {
+                 this.game.events.emit('open_post', post);
+            } else {
+                // Drop effect? Maybe simple gravity will take over if bounds are set
+                // Or give it a little toss velocity based on drag speed? (Simple version: just release)
+            }
         });
 
         // Add Bubble
@@ -476,7 +546,9 @@ export class PlazaScene extends Scene {
 
             // Stop occasionally
             if (Math.random() < 0.005) {
-                sprite.setVelocity(0);
+                if (!(sprite as any).isBeingDragged) { // Only stop if not being dragged
+                    sprite.setVelocity(0);
+                }
             }
         });
     }
