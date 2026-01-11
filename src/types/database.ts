@@ -45,10 +45,10 @@ export type Database = {
                     company_id: string
                     title: string
                     description: string | null
-                    location: string | null
                     reward: string | null
+                    location: string | null
                     thumbnail_url: string | null
-                    status: 'open' | 'closed' | 'draft'
+                    status: string
                     created_at: string
                     updated_at: string
                 }
@@ -57,10 +57,10 @@ export type Database = {
                     company_id: string
                     title: string
                     description?: string | null
-                    location?: string | null
                     reward?: string | null
+                    location?: string | null
                     thumbnail_url?: string | null
-                    status?: 'open' | 'closed' | 'draft'
+                    status?: string
                     created_at?: string
                     updated_at?: string
                 }
@@ -69,10 +69,10 @@ export type Database = {
                     company_id?: string
                     title?: string
                     description?: string | null
-                    location?: string | null
                     reward?: string | null
+                    location?: string | null
                     thumbnail_url?: string | null
-                    status?: 'open' | 'closed' | 'draft'
+                    status?: string
                     created_at?: string
                     updated_at?: string
                 }
@@ -250,6 +250,74 @@ export type Database = {
                         foreignKeyName: "conversation_participants_user_id_fkey"
                         columns: ["user_id"]
                         referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            likes: {
+                Row: {
+                    id: number
+                    user_id: string
+                    post_id: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: number
+                    user_id: string
+                    post_id: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: number
+                    user_id?: string
+                    post_id?: string
+                    created_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "likes_user_id_fkey"
+                        columns: ["user_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "likes_post_id_fkey"
+                        columns: ["post_id"]
+                        referencedRelation: "plaza_posts"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            bookmarks: {
+                Row: {
+                    id: number
+                    user_id: string
+                    post_id: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: number
+                    user_id: string
+                    post_id: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: number
+                    user_id?: string
+                    post_id?: string
+                    created_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "bookmarks_user_id_fkey"
+                        columns: ["user_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "bookmarks_post_id_fkey"
+                        columns: ["post_id"]
+                        referencedRelation: "plaza_posts"
                         referencedColumns: ["id"]
                     }
                 ]

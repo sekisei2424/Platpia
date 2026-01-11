@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import ChatWindow from '@/components/messages/ChatWindow';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -12,6 +12,7 @@ export default function ConversationPage({
 }) {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const resolvedParams = use(params);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -21,7 +22,7 @@ export default function ConversationPage({
 
     return (
         <div className="h-full">
-            <ChatWindow conversationId="" />
+            <ChatWindow conversationId={resolvedParams.id} />
         </div>
     );
 }

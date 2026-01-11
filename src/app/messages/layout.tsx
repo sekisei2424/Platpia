@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { supabaseService } from '@/services/supabaseService';
 import Sidebar from '@/components/ui/Sidebar';
 import { User } from 'lucide-react';
+import { getAvatarUrl } from '@/lib/avatar';
 
 export default function MessagesLayout({
     children,
@@ -58,10 +59,13 @@ export default function MessagesLayout({
                                     className="block p-4 hover:bg-gray-50 transition-colors"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                             {convo.other_user?.avatar_type ? (
-                                                // Ideally render the SVG avatar here, but for list view maybe just initial or simple icon
-                                                <User size={20} className="text-gray-500" />
+                                                <img
+                                                    src={getAvatarUrl(convo.other_user.avatar_type)}
+                                                    alt={convo.other_user.username}
+                                                    className="w-full h-full object-cover object-top"
+                                                />
                                             ) : (
                                                 <span className="font-bold text-gray-500">
                                                     {convo.other_user?.username?.[0]?.toUpperCase() || '?'}
