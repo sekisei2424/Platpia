@@ -1,19 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import PhaserGame from '@/components/game/PhaserGame';
 import Sidebar from '@/components/ui/Sidebar';
 import Modal from '@/components/ui/Modal';
 import JobBoard from '@/components/ui/JobBoard';
 import PostForm from '@/components/ui/PostForm';
 import PostDetailModal from '@/components/ui/PostDetailModal';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { X } from 'lucide-react';
 
 export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [isJobBoardOpen, setIsJobBoardOpen] = useState(false);
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth');
+    }
+  }, [user, loading, router]);
 
   const handleNextPost = () => {
     if (!selectedPost || posts.length === 0) return;

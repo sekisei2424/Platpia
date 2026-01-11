@@ -23,22 +23,32 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     if (showSuccess) {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                <div className="relative w-full max-w-md bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 overflow-hidden p-8 text-center">
-                    <div className="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Mail size={32} />
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-white p-4 font-pixel">
+                <div className="relative w-full max-w-md bg-white border-2 border-gray-900 shadow-[4px_4px_0px_rgba(0,0,0,0.1)] overflow-hidden">
+                    <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-gray-900"></div>
+                    <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-gray-900"></div>
+                    <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-gray-900"></div>
+                    <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-gray-900"></div>
+                    
+                    <div className="p-8 text-center">
+                        <div className="w-16 h-16 bg-gray-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-gray-900 shadow-[2px_2px_0px_rgba(0,0,0,0.2)]">
+                            <Mail size={32} strokeWidth={2.5} />
+                        </div>
+                        <h2 className="text-xl font-black text-gray-900 mb-2 uppercase tracking-tight">メール確認</h2>
+                        <p className="text-sm text-gray-700 font-bold mb-6">
+                            確認リンクを <strong>{email}</strong> に送信しました。<br />
+                            メールを確認してサインアップを完了してください。
+                        </p>
+                        <button
+                            onClick={onClose}
+                            className={`
+                                w-full py-3 px-4 border-2 border-gray-900 font-bold transition-all text-sm
+                                bg-gray-900 text-white shadow-[inset_2px_2px_0px_rgba(50,50,50,1)] translate-y-[2px]
+                            `}
+                        >
+                            了解
+                        </button>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Check your email!</h2>
-                    <p className="text-gray-600 dark:text-gray-300 mb-6">
-                        We've sent a confirmation link to <strong>{email}</strong>.<br />
-                        Please verify your email to complete the registration.
-                    </p>
-                    <button
-                        onClick={onClose}
-                        className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors"
-                    >
-                        Got it
-                    </button>
                 </div>
             </div>
         );
@@ -50,12 +60,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         try {
             if (isSignUp) {
                 await signUp(email, password, { user_type: userType, username });
-                // Show success message (handled by alert in AuthProvider for now, but we can improve this later)
-                // For now, let's just close the modal as requested by the user flow, 
-                // BUT the user asked for a "check your mail" popup.
-                // Since we are using password auth, email confirmation might still be on.
-                // Let's rely on the alert in AuthProvider or replace it with a custom UI state here.
-                // I'll update AuthProvider to NOT alert, and handle UI here.
                 setShowSuccess(true);
             } else {
                 await signIn(email, password);
@@ -72,82 +76,99 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     return (
         <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" 
+            className="w-full max-w-md font-pixel" 
             onClick={(e) => {
                 e.stopPropagation();
-                onClose();
             }}
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
         >
             <div 
-                className="relative w-full max-w-md bg-[#FDFBF7] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200"
+                className="relative bg-white border-2 border-gray-900 shadow-[4px_4px_0px_rgba(0,0,0,0.2)] overflow-hidden"
                 onClick={e => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
             >
+                {/* Decorative corners */}
+                <div className="absolute top-1 left-1 w-4 h-4 border-t-2 border-l-2 border-gray-900"></div>
+                <div className="absolute top-1 right-1 w-4 h-4 border-t-2 border-r-2 border-gray-900"></div>
+                <div className="absolute bottom-1 left-1 w-4 h-4 border-b-2 border-l-2 border-gray-900"></div>
+                <div className="absolute bottom-1 right-1 w-4 h-4 border-b-2 border-r-2 border-gray-900"></div>
+
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors z-10 hover:bg-gray-100 rounded-full"
+                    className="absolute top-4 right-4 p-2 text-gray-900 hover:bg-gray-100 transition-colors z-10 hover:text-gray-700 border-2 border-gray-900 bg-white shadow-[1px_1px_0px_rgba(0,0,0,0.1)]"
                 >
-                    <X size={20} />
+                    <X size={18} strokeWidth={3} />
                 </button>
 
                 <div className="p-8">
-                    <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            {isSignUp ? 'Create Account' : 'Welcome Back'}
-                        </h2>
-                        <p className="text-gray-600 mt-2">
-                            {isSignUp ? 'Join the community today' : 'Sign in to continue'}
-                        </p>
+                    <div className="mb-8 flex items-center gap-3 border-b-2 border-gray-900 pb-4">
+                        <div className="bg-gray-900 p-2 border-2 border-gray-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]">
+                            <User className="text-white" size={24} strokeWidth={2.5} />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase">
+                                {isSignUp ? 'アカウント作成' : 'サインイン'}
+                            </h2>
+                            <p className="text-xs font-bold text-gray-500 mt-0.5 uppercase tracking-widest">
+                                {isSignUp ? 'Sign Up' : 'Sign In'}
+                            </p>
+                        </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-5">
                         {/* User Type Selection (Only for Sign Up) */}
                         {isSignUp && (
-                            <div className="grid grid-cols-2 gap-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setUserType('individual')}
-                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${userType === 'individual'
-                                        ? 'border-blue-500 bg-blue-50 text-blue-600'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                        }`}
-                                >
-                                    <User size={24} className="mb-2" />
-                                    <span className="font-medium">Individual</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setUserType('company')}
-                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${userType === 'company'
-                                        ? 'border-purple-500 bg-purple-50 text-purple-600'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                        }`}
-                                >
-                                    <Building size={24} className="mb-2" />
-                                    <span className="font-medium">Company</span>
-                                </button>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">ユーザータイプを選択</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setUserType('individual')}
+                                        className={`
+                                            flex flex-col items-center justify-center p-4 border-2 transition-all font-bold text-sm
+                                            ${userType === 'individual'
+                                                ? "bg-gray-900 text-white border-gray-900 shadow-[inset_2px_2px_0px_rgba(255,255,255,0.2)] translate-y-[2px]" 
+                                                : "bg-white text-gray-900 border-gray-900 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.1),inset_2px_2px_0px_#ffffff,2px_2px_0px_#000] hover:bg-gray-50 active:shadow-none active:translate-y-[2px]"
+                                            }
+                                        `}
+                                    >
+                                        <User size={20} className="mb-2" strokeWidth={2.5} />
+                                        <span>個人</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setUserType('company')}
+                                        className={`
+                                            flex flex-col items-center justify-center p-4 border-2 transition-all font-bold text-sm
+                                            ${userType === 'company'
+                                                ? "bg-gray-900 text-white border-gray-900 shadow-[inset_2px_2px_0px_rgba(255,255,255,0.2)] translate-y-[2px]" 
+                                                : "bg-white text-gray-900 border-gray-900 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.1),inset_2px_2px_0px_#ffffff,2px_2px_0px_#000] hover:bg-gray-50 active:shadow-none active:translate-y-[2px]"
+                                            }
+                                        `}
+                                    >
+                                        <Building size={20} className="mb-2" strokeWidth={2.5} />
+                                        <span>法人</span>
+                                    </button>
+                                </div>
                             </div>
                         )}
 
                         {/* Username Input (Only for Sign Up) */}
                         {isSignUp && (
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">
-                                    Username
-                                </label>
+                                <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">ユーザー名</label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} strokeWidth={2.5} />
                                     <input
                                         type="text"
                                         required
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                        placeholder="Your Name"
+                                        className="w-full h-12 pl-10 pr-4 text-gray-900 border-2 border-gray-900 bg-white shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)] outline-none font-bold text-sm placeholder:text-gray-400 focus:bg-green-50/50 transition-colors"
+                                        placeholder="ユーザー名を入力..."
                                         minLength={2}
                                     />
                                 </div>
@@ -156,35 +177,31 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                         {/* Email Input */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                                Email Address
-                            </label>
+                            <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">メールアドレス</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} strokeWidth={2.5} />
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                    placeholder="name@example.com"
+                                    className="w-full h-12 pl-10 pr-4 text-gray-900 border-2 border-gray-900 bg-white shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)] outline-none font-bold text-sm placeholder:text-gray-400 focus:bg-green-50/50 transition-colors"
+                                    placeholder="example@mail.com"
                                 />
                             </div>
                         </div>
 
                         {/* Password Input */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                                Password
-                            </label>
+                            <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">パスワード</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} strokeWidth={2.5} />
                                 <input
                                     type="password"
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    className="w-full h-12 pl-10 pr-4 text-gray-900 border-2 border-gray-900 bg-white shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)] outline-none font-bold text-sm placeholder:text-gray-400 focus:bg-green-50/50 transition-colors"
                                     placeholder="••••••••"
                                     minLength={6}
                                 />
@@ -194,18 +211,24 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg transform transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`
+                                w-full h-12 border-2 border-gray-900 font-bold transition-all text-sm uppercase tracking-widest flex items-center justify-center
+                                ${loading 
+                                    ? "bg-gray-500 text-white opacity-50 cursor-not-allowed shadow-[inset_2px_2px_0px_rgba(50,50,50,1)] translate-y-[2px]"
+                                    : "bg-gray-900 text-white shadow-[inset_-2px_-2px_0px_rgba(50,50,50,1),3px_3px_0px_#000] hover:bg-gray-800 active:shadow-none active:translate-y-[3px]"
+                                }
+                            `}
                         >
-                            {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+                            {loading ? '処理中...' : (isSignUp ? 'アカウント作成' : 'サインイン')}
                         </button>
                     </form>
 
-                    <div className="mt-6 text-center">
+                    <div className="mt-6 text-center border-t-2 border-gray-200 pt-4">
                         <button
                             onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-sm text-gray-500 hover:text-gray-700 underline decoration-dotted"
+                            className="text-xs font-bold text-gray-700 hover:text-gray-900 transition-colors uppercase tracking-widest"
                         >
-                            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                            {isSignUp ? 'アカウントをお持ちですか？サインイン' : 'アカウントを作成'}
                         </button>
                     </div>
                 </div>

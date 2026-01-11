@@ -1,23 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
 import PostForm from '@/components/ui/PostForm';
 import Modal from '@/components/ui/Modal';
-import AuthModal from '@/components/auth/AuthModal';
 import AvatarBuilder from '@/components/avatar/AvatarBuilder';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabaseService } from '@/services/supabaseService';
 
 export default function ProfilePage() {
     const [isPostFormOpen, setIsPostFormOpen] = useState(false);
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    const router = useRouter();
     const [profile, setProfile] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const [pageLoading, setPageLoading] = useState(true);
 
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ username: '', bio: '' });
     const [isAvatarEditing, setIsAvatarEditing] = useState(false);
+
+    // ログイン状態をチェック：未認証なら /auth にリダイレクト
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push('/auth');
+        }
+    }, [user, loading, router]);
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -26,7 +34,7 @@ export default function ProfilePage() {
                 setProfile(data);
                 setEditForm({ username: data?.username || '', bio: data?.bio || '' });
             }
-            setLoading(false);
+            setPageLoading(false);
         };
         loadProfile();
     }, [user]);
@@ -51,133 +59,113 @@ export default function ProfilePage() {
         }
     };
 
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
-    if (loading) return <div className="flex items-center justify-center h-screen bg-village-base text-white">Loading...</div>;
-
-    if (!user) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-village-base">
-                <div className="text-center text-white space-y-6">
-                    <h1 className="text-3xl font-bold">Welcome to Village</h1>
-                    <p className="text-gray-300 text-lg">Join our community to create your profile and share your story.</p>
-
-                    <div className="flex flex-col gap-4 items-center">
-                        <div className="flex gap-4">
-                            <button
-                                onClick={() => setIsAuthModalOpen(true)}
-                                className="px-8 py-3 bg-village-accent hover:bg-blue-600 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-blue-500/25"
-                            >
-                                Sign In / Sign Up
-                            </button>
-                            <a href="/" className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition-all backdrop-blur-sm">
-                                Back to Home
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <AuthModal
-                    isOpen={isAuthModalOpen}
-                    onClose={() => setIsAuthModalOpen(false)}
-                />
-            </div>
-        );
-    }
+    if (loading || pageLoading) return <div className="flex items-center justify-center h-screen bg-white text-gray-900 font-pixel">Loading...</div>;
 
     return (
-        <main className="flex w-full h-screen bg-village-base overflow-hidden flex-col md:flex-row">
+        <main className="flex w-full h-screen bg-white overflow-hidden flex-col md:flex-row font-pixel text-gray-900 select-none">
             {/* Sidebar Layer */}
             <div className="flex-shrink-0 z-20">
                 <Sidebar onPostClick={() => setIsPostFormOpen(true)} />
             </div>
 
             {/* Content Layer */}
-            <div className="flex-grow relative z-0 overflow-y-auto bg-black pb-20 md:pb-0">
+            <div className="flex-grow relative z-0 overflow-y-auto bg-white pb-20 md:pb-0">
                 {/* Header */}
-                <div className="bg-black border-b border-white/10 backdrop-blur-sm">
-                    <div className="flex items-center justify-center py-8 text-center">
-                        <h1 className="text-3xl font-light text-white tracking-tight">My Profile</h1>
+                <div className="bg-white border-b-2 border-gray-900">
+                    <div className="flex items-center justify-center py-6 text-center">
+                        <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">My Profile</h1>
                     </div>
                 </div>
 
-                <div className="pt-8 px-6 pb-8 max-w-6xl mx-auto">
-                    <div className="flex flex-col lg:flex-row gap-12">
-                        {/* Left: Avatar + Builder */}
-                        <div className="lg:w-2/5">
-                            <div className="space-y-6">
-                                <div className="text-center">
-                                    <h2 className="text-sm font-semibold text-white/60 tracking-tight uppercase mb-4">Character</h2>
-                                    <div className="flex items-center justify-center">
-                                        <div className="w-80 h-80 bg-gradient-to-b from-gray-800 to-gray-900 rounded-2xl overflow-hidden flex items-center justify-center border border-white/10">
-                                            {profile?.avatar_type ? (
-                                                <img src={profile.avatar_type} alt={profile.username} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="text-6xl text-white bg-gradient-to-br from-blue-600 to-blue-700 w-full h-full flex items-center justify-center font-bold">{profile?.username?.[0]?.toUpperCase() || 'A'}</div>
-                                            )}
-                                        </div>
+                <div className="pt-8 px-6 pb-8 h-full overflow-hidden">
+                    <div className="flex flex-col lg:flex-row gap-8 h-full">
+                        {/* Left: Avatar + Builder - 拡大版 */}
+                        <div className="lg:w-3/5 flex flex-col">
+                            <div className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-4">Character</div>
+                            
+                            {!isAvatarEditing ? (
+                                <div className="flex-grow flex items-center justify-center min-h-0">
+                                    <div className="w-full h-full max-w-2xl max-h-2xl bg-white border-2 border-gray-900 overflow-hidden flex items-center justify-center shadow-[4px_4px_0px_rgba(0,0,0,0.1)]">
+                                        {profile?.avatar_type ? (
+                                            <img src={profile.avatar_type} alt={profile.username} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="text-8xl text-white bg-gray-900 w-full h-full flex items-center justify-center font-black">{profile?.username?.[0]?.toUpperCase() || 'A'}</div>
+                                        )}
                                     </div>
                                 </div>
-
-                                <div className="flex justify-center">
-                                    {!isAvatarEditing ? (
-                                        <button
-                                            onClick={() => setIsAvatarEditing(true)}
-                                            className="px-6 py-2.5 bg-white/10 text-white rounded-lg font-medium hover:bg-white/20 transition-colors border border-white/20"
-                                        >
-                                            Edit Avatar
-                                        </button>
-                                    ) : (
-                                        <div className="w-full">
-                                            <div className="mb-4 flex justify-end">
-                                                <button
-                                                    onClick={() => setIsAvatarEditing(false)}
-                                                    className="px-4 py-2 text-white/70 text-sm hover:text-white transition-colors"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                            <AvatarBuilder onSaved={async () => { await reloadProfile(); setIsAvatarEditing(false); }} />
-                                        </div>
-                                    )}
+                            ) : (
+                                <div className="flex-grow flex items-center justify-center min-h-0 overflow-y-auto">
+                                    <div className="w-full">
+                                        <AvatarBuilder onSaved={async () => { await reloadProfile(); setIsAvatarEditing(false); }} />
+                                    </div>
                                 </div>
+                            )}
+                            
+                            <div className="flex justify-center gap-3 mt-4">
+                                {!isAvatarEditing ? (
+                                    <button
+                                        onClick={() => setIsAvatarEditing(true)}
+                                        className={`
+                                            px-6 py-3 border-2 border-gray-900 font-bold transition-all text-sm uppercase tracking-widest
+                                            bg-white text-gray-900 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.1),inset_2px_2px_0px_#ffffff,2px_2px_0px_#000] hover:bg-gray-50 active:shadow-none active:translate-y-[2px]
+                                        `}
+                                    >
+                                        Edit Avatar
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => setIsAvatarEditing(false)}
+                                        className={`
+                                            px-6 py-3 border-2 border-gray-900 font-bold transition-all text-sm uppercase tracking-widest
+                                            bg-white text-gray-900 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.1),inset_2px_2px_0px_#ffffff,2px_2px_0px_#000] hover:bg-gray-50 active:shadow-none active:translate-y-[2px]
+                                        `}
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
                             </div>
                         </div>
 
                         {/* Right: Profile Information */}
-                        <div className="lg:w-3/5 space-y-6">
-                            <div className="bg-gradient-to-b from-gray-900/50 to-black/50 p-8 rounded-2xl border border-white/10 backdrop-blur-sm">
-                                <h3 className="text-xs font-semibold text-white/40 tracking-wider uppercase mb-4">Profile</h3>
+                        <div className="lg:w-2/5 space-y-6 overflow-y-auto">
+                            <div className="relative bg-white border-2 border-gray-900 p-6 shadow-[4px_4px_0px_rgba(0,0,0,0.1)]">
+                                <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-gray-900"></div>
+                                <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-gray-900"></div>
+                                <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-gray-900"></div>
+                                <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-gray-900"></div>
+                                
+                                <h3 className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-4">Profile</h3>
 
                                 {isEditing ? (
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-xs font-medium text-white/60 mb-2">NAME</label>
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-widest block mb-2">Name</label>
                                             <input
                                                 type="text"
                                                 value={editForm.username}
                                                 onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/30 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-colors"
+                                                className="w-full h-10 px-3 text-gray-900 border-2 border-gray-900 bg-white shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)] outline-none font-bold text-sm placeholder:text-gray-400 focus:bg-green-50/50 transition-colors"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-white/60 mb-2">BIO</label>
+                                            <label className="text-xs font-bold text-gray-600 uppercase tracking-widest block mb-2">Bio</label>
                                             <textarea
                                                 value={editForm.bio}
                                                 onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
                                                 rows={3}
-                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/30 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-colors"
+                                                className="w-full px-3 py-2 text-gray-900 border-2 border-gray-900 bg-white shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)] outline-none font-bold text-sm placeholder:text-gray-400 focus:bg-green-50/50 transition-colors"
                                             />
                                         </div>
                                         <div className="flex gap-2 justify-end pt-2">
                                             <button
                                                 onClick={handleSave}
-                                                className="px-4 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-white/90 transition-colors"
+                                                className={`px-4 py-2 border-2 border-gray-900 font-bold transition-all text-sm bg-gray-900 text-white shadow-[inset_2px_2px_0px_rgba(50,50,50,1)] translate-y-[2px]`}
                                             >
                                                 Save
                                             </button>
                                             <button
                                                 onClick={() => setIsEditing(false)}
-                                                className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors border border-white/10"
+                                                className={`px-4 py-2 border-2 border-gray-900 font-bold transition-all text-sm bg-white text-gray-900 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.1),inset_2px_2px_0px_#ffffff,2px_2px_0px_#000] hover:bg-gray-50 active:shadow-none active:translate-y-[2px]`}
                                             >
                                                 Cancel
                                             </button>
@@ -185,25 +173,25 @@ export default function ProfilePage() {
                                     </div>
                                 ) : (
                                     <div>
-                                        <div className="flex items-start justify-between mb-6">
+                                        <div className="flex items-start justify-between mb-4">
                                             <div>
-                                                <h1 className="text-2xl font-light text-white tracking-tight">{profile?.username || 'Anonymous'}</h1>
-                                                <p className="text-white/40 text-sm mt-1">@{profile?.id?.substring(0, 8)}</p>
+                                                <h1 className="text-xl font-black text-gray-900 tracking-tighter uppercase">{profile?.username || 'Anonymous'}</h1>
+                                                <p className="text-gray-500 text-xs mt-1 font-bold">@{profile?.id?.substring(0, 8)}</p>
                                             </div>
-                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                            <span className={`px-2 py-1 text-xs font-bold uppercase tracking-widest border-2 ${
                                                 profile?.user_type === 'company'
-                                                    ? 'bg-purple-500/20 text-purple-300'
-                                                    : 'bg-blue-500/20 text-blue-300'
+                                                    ? 'border-purple-600 bg-purple-100 text-purple-700'
+                                                    : 'border-blue-600 bg-blue-100 text-blue-700'
                                             }`}>
-                                                {profile?.user_type === 'company' ? 'Company' : 'Villager'}
+                                                {profile?.user_type === 'company' ? '法人' : '個人'}
                                             </span>
                                         </div>
                                         {profile?.bio && (
-                                            <p className="text-white/70 text-sm leading-relaxed mb-6">{profile.bio}</p>
+                                            <p className="text-gray-700 text-sm leading-relaxed mb-4">{profile.bio}</p>
                                         )}
                                         <button
                                             onClick={() => setIsEditing(true)}
-                                            className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors border border-white/20"
+                                            className={`px-4 py-2 border-2 border-gray-900 font-bold transition-all text-sm bg-white text-gray-900 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.1),inset_2px_2px_0px_#ffffff,2px_2px_0px_#000] hover:bg-gray-50 active:shadow-none active:translate-y-[2px]`}
                                         >
                                             Edit
                                         </button>
@@ -211,62 +199,82 @@ export default function ProfilePage() {
                                 )}
                             </div>
 
-                            <div className="bg-gradient-to-b from-gray-900/50 to-black/50 p-8 rounded-2xl border border-white/10 backdrop-blur-sm">
-                                <h3 className="text-xs font-semibold text-white/40 tracking-wider uppercase mb-6">Details</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                                        <div className="text-xs font-medium text-white/50 uppercase tracking-wide mb-2">Location</div>
-                                        <div className="text-lg font-light text-white">({profile?.current_location_x || 0}, {profile?.current_location_y || 0})</div>
+                            <div className="relative bg-white border-2 border-gray-900 p-6 shadow-[4px_4px_0px_rgba(0,0,0,0.1)]">
+                                <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-gray-900"></div>
+                                <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-gray-900"></div>
+                                <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-gray-900"></div>
+                                <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-gray-900"></div>
+                                
+                                <h3 className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-4">Details</h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-white border-2 border-gray-900 p-3 shadow-[2px_2px_0px_rgba(0,0,0,0.1)]">
+                                        <div className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Location</div>
+                                        <div className="text-sm font-bold text-gray-900">({profile?.current_location_x || 0}, {profile?.current_location_y || 0})</div>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                                        <div className="text-xs font-medium text-white/50 uppercase tracking-wide mb-2">Type</div>
-                                        <div className="text-lg font-light text-white">{profile?.user_type === 'company' ? 'Company' : 'Villager'}</div>
+                                    <div className="bg-white border-2 border-gray-900 p-3 shadow-[2px_2px_0px_rgba(0,0,0,0.1)]">
+                                        <div className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Type</div>
+                                        <div className="text-sm font-bold text-gray-900">{profile?.user_type === 'company' ? '法人' : '個人'}</div>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                                        <div className="text-xs font-medium text-white/50 uppercase tracking-wide mb-2">Joined</div>
-                                        <div className="text-sm font-light text-white/80">{new Date(profile?.created_at).toLocaleDateString()}</div>
+                                    <div className="bg-white border-2 border-gray-900 p-3 shadow-[2px_2px_0px_rgba(0,0,0,0.1)]">
+                                        <div className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Joined</div>
+                                        <div className="text-xs font-bold text-gray-700">{new Date(profile?.created_at).toLocaleDateString('ja-JP')}</div>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                                        <div className="text-xs font-medium text-white/50 uppercase tracking-wide mb-2">Member ID</div>
-                                        <div className="text-sm font-light text-white/80">{profile?.id?.substring(0, 6)}</div>
+                                    <div className="bg-white border-2 border-gray-900 p-3 shadow-[2px_2px_0px_rgba(0,0,0,0.1)]">
+                                        <div className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Member ID</div>
+                                        <div className="text-xs font-bold text-gray-700">{profile?.id?.substring(0, 6)}</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-gradient-to-b from-gray-900/50 to-black/50 p-8 rounded-2xl border border-white/10 backdrop-blur-sm">
-                                <h3 className="text-xs font-semibold text-white/40 tracking-wider uppercase mb-4">About</h3>
-                                <p className="text-white/70 leading-relaxed text-sm">
+                            <div className="relative bg-white border-2 border-gray-900 p-6 shadow-[4px_4px_0px_rgba(0,0,0,0.1)]">
+                                <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-gray-900"></div>
+                                <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-gray-900"></div>
+                                <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-gray-900"></div>
+                                <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-gray-900"></div>
+                                
+                                <h3 className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-3">About</h3>
+                                <p className="text-gray-700 text-sm leading-relaxed font-medium">
                                     {profile?.description || 'No description yet.'}
                                 </p>
                             </div>
 
-                            <div className="bg-gradient-to-b from-gray-900/50 to-black/50 p-8 rounded-2xl border border-white/10 backdrop-blur-sm">
-                                <h3 className="text-xs font-semibold text-white/40 tracking-wider uppercase mb-6">Stats</h3>
-                                <div className="space-y-6">
+                            <div className="relative bg-white border-2 border-gray-900 p-6 shadow-[4px_4px_0px_rgba(0,0,0,0.1)]">
+                                <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-gray-900"></div>
+                                <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-gray-900"></div>
+                                <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-gray-900"></div>
+                                <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-gray-900"></div>
+                                
+                                <h3 className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-4">Stats</h3>
+                                <div className="space-y-4">
                                     <div>
-                                        <div className="flex justify-between items-center mb-3">
-                                            <span className="text-xs font-medium text-white/60 uppercase tracking-wide">Level</span>
-                                            <span className="text-xl font-light text-white">1</span>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs font-bold text-gray-600 uppercase tracking-widest">Level</span>
+                                            <span className="text-lg font-black text-gray-900">1</span>
                                         </div>
-                                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                                            <div className="w-1/10 h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"></div>
+                                        <div className="w-full h-3 bg-gray-200 border-2 border-gray-900 overflow-hidden shadow-[inset_1px_1px_0px_rgba(0,0,0,0.1)]">
+                                            <div className="w-1/10 h-full bg-blue-600"></div>
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="flex justify-between items-center mb-3">
-                                            <span className="text-xs font-medium text-white/60 uppercase tracking-wide">Reputation</span>
-                                            <span className="text-xl font-light text-white">0</span>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs font-bold text-gray-600 uppercase tracking-widest">Reputation</span>
+                                            <span className="text-lg font-black text-gray-900">0</span>
                                         </div>
-                                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                                            <div className="w-0 h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full"></div>
+                                        <div className="w-full h-3 bg-gray-200 border-2 border-gray-900 overflow-hidden shadow-[inset_1px_1px_0px_rgba(0,0,0,0.1)]">
+                                            <div className="w-0 h-full bg-orange-500"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-gradient-to-b from-gray-900/50 to-black/50 p-8 rounded-2xl border border-white/10 backdrop-blur-sm">
-                                <h3 className="text-xs font-semibold text-white/40 tracking-wider uppercase mb-4">Activity</h3>
-                                <p className="text-white/50 text-center text-sm">
+                            <div className="relative bg-white border-2 border-gray-900 p-6 shadow-[4px_4px_0px_rgba(0,0,0,0.1)]">
+                                <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-gray-900"></div>
+                                <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-gray-900"></div>
+                                <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-gray-900"></div>
+                                <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-gray-900"></div>
+                                
+                                <h3 className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-4">Activity</h3>
+                                <p className="text-gray-500 text-center text-xs font-bold">
                                     No recent activity
                                 </p>
                             </div>
