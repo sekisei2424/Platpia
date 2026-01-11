@@ -194,7 +194,15 @@ export default function JobBoard({ searchQuery = '', filterLocation = [], filter
                                     {job.title}
                                 </h3>
 
-                                <div className="flex items-center gap-3 mb-4 px-2 py-2 bg-gray-50 border-y-2 border-dotted border-gray-300">
+                                <div 
+                                    className="flex items-center gap-3 mb-4 px-2 py-2 bg-gray-50 border-y-2 border-dotted border-gray-300 hover:bg-gray-100 transition-colors z-30" 
+                                    onClick={(e) => {
+                                        if (job.company_id) {
+                                            e.stopPropagation();
+                                            router.push(`/profile/${job.company_id}`);
+                                        }
+                                    }}
+                                >
                                     <div className="w-12 h-12 border-2 border-gray-900 bg-white flex-shrink-0 overflow-hidden rounded-full shadow-sm">
                                         {owner?.avatar_type ? (
                                             <img
@@ -208,13 +216,13 @@ export default function JobBoard({ searchQuery = '', filterLocation = [], filter
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <span className="text-[9px] text-gray-500 font-bold leading-none uppercase tracking-wider">掲載者</span>
-                                        <span className="text-sm font-black truncate text-gray-900 leading-tight mt-0.5">
+                                        <span className="text-sm font-black truncate text-gray-900 leading-tight mt-0.5 underline decoration-gray-400 underline-offset-2">
                                             {owner?.username || '不明なユーザー'}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="mt-auto flex flex-col gap-2">
+                                <div className="mt-auto flex flex-col gap-2 pointer-events-none">
                                     <div className="flex items-center justify-between gap-2 text-xs font-bold w-full">
                                         <div className="shrink-0 flex items-center gap-1 text-gray-600 bg-white px-1 py-0.5 border border-transparent">
                                             <MapPin size={14} className="shrink-0 text-gray-900" />

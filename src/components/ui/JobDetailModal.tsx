@@ -23,8 +23,11 @@ interface JobDetailModalProps {
     onApply: (jobId: string) => void;
 }
 
+import { useRouter } from 'next/navigation';
+
 export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDetailModalProps) {
     const { user } = useAuth();
+    const router = useRouter(); // Initialize router
     const [applicants, setApplicants] = useState<Applicant[]>([]);
     const [isOwner, setIsOwner] = useState(false);
     const [userApplication, setUserApplication] = useState<Applicant | null>(null);
@@ -133,8 +136,16 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
 
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 bg-gray-50 p-4 rounded-lg border-2 border-gray-200 shadow-sm">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-300">
+                            <div 
+                                className="flex items-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => {
+                                    if (job.company_id) {
+                                        onClose(); // Close modal first
+                                        router.push(`/profile/${job.company_id}`);
+                                    }
+                                }}
+                            >
+                                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-300 pointer-events-none">
                                     {ownerProfile?.avatar_type ? (
                                         <img 
                                             src={getAvatarUrl(ownerProfile.avatar_type)} 
@@ -149,7 +160,7 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
                                 </div>
                                 <div>
                                     <div className="text-xs font-black text-gray-400">掲載者</div>
-                                    <div className="text-sm font-bold text-gray-800">
+                                    <div className="text-sm font-bold text-gray-800 underline decoration-gray-400 underline-offset-2">
                                         {ownerProfile?.username || '不明なユーザー'}
                                     </div>
                                 </div>
