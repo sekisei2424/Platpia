@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { supabaseService } from '@/services/supabaseService';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/lib/supabase/client';
-import { Send } from 'lucide-react';
+import { Send, User } from 'lucide-react';
 import PostForm from '@/components/ui/PostForm';
 import JobDetailModal from '@/components/ui/JobDetailModal';
+import Modal from '@/components/ui/Modal';
 
 interface Message {
     id: string;
@@ -28,11 +29,8 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     
-    // Post Feedback State
     const [isPostFormOpen, setIsPostFormOpen] = useState(false);
     const [feedbackJobId, setFeedbackJobId] = useState<string | null>(null);
-
-    // Job Detail State
     const [selectedJob, setSelectedJob] = useState<any>(null);
     const [isJobModalOpen, setIsJobModalOpen] = useState(false);
 
@@ -40,9 +38,7 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
         loadMessages();
         markAsRead();
         const unsubscribe = subscribeToMessages();
-        return () => {
-            unsubscribe();
-        };
+        return () => unsubscribe();
     }, [conversationId]);
 
     const markAsRead = async () => {
@@ -71,22 +67,15 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                 },
                 (payload) => {
                     const newMessage = payload.new as Message;
-                    // Prevent duplicates from optimistic updates
                     setMessages((prev) => {
-                        if (prev.some(msg => msg.id === newMessage.id)) {
-                            return prev;
-                        }
+                        if (prev.some(msg => msg.id === newMessage.id)) return prev;
                         return [...prev, newMessage];
                     });
-                    // Mark as read when new message arrives if we are in the chat
                     markAsRead();
                 }
             )
             .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
+        return () => { supabase.removeChannel(channel); };
     };
 
     const scrollToBottom = () => {
@@ -106,42 +95,31 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
             message_type: 'text'
         };
 
-        // Optimistic update
         setMessages((prev) => [...prev, tempMessage]);
         setNewMessage('');
 
         try {
             const sentMessage = await supabaseService.sendMessage(conversationId, user.id, tempMessage.content);
             setMessages((prev) => prev.map(msg => msg.id === tempId ? (sentMessage as Message) : msg));
-
         } catch (error) {
-            console.error('Error sending message:', JSON.stringify(error, null, 2));
             setMessages((prev) => prev.filter(msg => msg.id !== tempId));
             alert('Failed to send message');
         }
     };
 
     const parseContent = (content: string) => {
-        // Check for Post Feedback
         const feedbackMatch = content.match(/\[POST_FEEDBACK:(.+?)\]/);
         if (feedbackMatch) {
             const jobId = feedbackMatch[1];
             const text = content.replace(feedbackMatch[0], '').trim();
             return { text, action: 'post_feedback', jobId };
         }
-        
-        // Check for Job Link (Applied)
-        // Format: [JOB_APPLIED:job_id] Text...
-        // Or just detect the standard text if we didn't change the format yet.
-        // But we should change the format in PostDetailModal/JobBoard to be robust.
-        // For now, let's support a new format we will implement: [JOB_LINK:job_id]
         const jobLinkMatch = content.match(/\[JOB_LINK:(.+?)\]/);
         if (jobLinkMatch) {
             const jobId = jobLinkMatch[1];
             const text = content.replace(jobLinkMatch[0], '').trim();
             return { text, action: 'view_job', jobId };
         }
-
         return { text: content, action: null };
     };
 
@@ -156,7 +134,6 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
             setSelectedJob(job);
             setIsJobModalOpen(true);
         } catch (error) {
-            console.error("Error fetching job:", error);
             alert("案件情報の取得に失敗しました。");
         }
     };
@@ -164,26 +141,36 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     if (!user) return null;
 
     return (
-        <div className="flex flex-col h-full relative">
-            {/* Messages Area */}
-            <div className="flex-grow overflow-y-auto p-4 space-y-4">
+        <div className="flex flex-col h-full bg-white border-l-4 border-gray-900 font-pixel">
+            {/* Header */}
+            <div className="bg-white border-b-4 border-gray-900 p-5 flex items-center justify-between shadow-[0_4px_0_rgba(0,0,0,0.05)]">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 border-2 border-gray-900 flex items-center justify-center bg-gray-50 shadow-[2px_2px_0px_#000]">
+                        <User size={20} />
+                    </div>
+                    <h2 className="text-xl font-black uppercase tracking-tighter">Conversation</h2>
+                </div>
+            </div>
+
+            {/* Messages Scroll Area */}
+            <div className="flex-grow overflow-y-auto p-6 space-y-6 bg-gray-50/30">
                 {messages.map((msg) => {
                     const isMe = msg.sender_id === user.id;
                     const isSystem = msg.message_type === 'system';
-                    const isBooking = msg.message_type === 'booking_request';
                     const { text, action, jobId } = parseContent(msg.content);
 
                     if (isSystem) {
                         return (
                             <div key={msg.id} className="flex justify-center my-6">
-                                <div className="bg-gray-100 text-gray-600 text-sm px-6 py-3 rounded-2xl text-center max-w-[85%] shadow-sm border border-gray-200">
-                                    <p className="whitespace-pre-wrap font-medium">{text}</p>
+                                <div className="bg-gray-100 border-2 border-gray-900 px-6 py-3 text-center max-w-[85%] shadow-[4px_4px_0_#000]">
+                                    <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Notice</p>
+                                    <p className="text-xs font-bold leading-relaxed">{text}</p>
                                     {action === 'post_feedback' && jobId && (
                                         <button 
                                             onClick={() => handlePostFeedback(jobId)} 
-                                            className="mt-3 px-5 py-2 bg-village-accent text-white rounded-full text-sm font-bold hover:bg-green-600 transition-colors shadow-sm"
+                                            className="mt-3 w-full py-1.5 bg-gray-900 text-white border-2 border-gray-900 text-[10px] font-black hover:bg-white hover:text-gray-900 transition-all shadow-[2px_2px_0_#000] active:translate-y-[1px] active:shadow-none"
                                         >
-                                            感想を投稿する
+                                            POST EXPERIENCE
                                         </button>
                                     )}
                                 </div>
@@ -192,30 +179,28 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                     }
 
                     return (
-                        <div
-                            key={msg.id}
-                            className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-                        >
-                            <div
-                                className={`max-w-[70%] rounded-2xl px-4 py-2 ${isMe
-                                    ? 'bg-blue-500 text-white rounded-br-none'
-                                    : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm'
-                                    } ${isBooking ? 'border-l-4 border-village-accent' : ''}`}
-                            >
-                                <p className="whitespace-pre-wrap">{text}</p>
-                                
-                                {action === 'view_job' && jobId && (
-                                    <button 
-                                        onClick={() => handleViewJob(jobId)}
-                                        className="mt-2 text-sm text-blue-600 hover:underline font-bold block bg-blue-50 px-3 py-1 rounded-lg w-full text-center"
-                                    >
-                                        案件詳細を見る
-                                    </button>
-                                )}
-
-                                <span className={`text-xs opacity-70 mt-1 block ${isMe ? 'text-blue-100' : 'text-gray-400'}`}>
+                        <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[80%] relative group`}>
+                                <div className={`
+                                    px-4 py-3 border-2 border-gray-900 shadow-[4px_4px_0_#000]
+                                    ${isMe ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}
+                                `}>
+                                    <p className="text-sm font-bold leading-relaxed whitespace-pre-wrap">{text}</p>
+                                    
+                                    {action === 'view_job' && jobId && (
+                                        <button 
+                                            onClick={() => handleViewJob(jobId)}
+                                            className={`mt-3 w-full border-2 py-1 text-[10px] font-black tracking-widest uppercase transition-all
+                                                ${isMe ? 'border-white bg-white text-gray-900 hover:bg-gray-200' : 'border-gray-900 bg-gray-900 text-white hover:bg-gray-800'}
+                                            `}
+                                        >
+                                            View Job Detail
+                                        </button>
+                                    )}
+                                </div>
+                                <div className={`text-[9px] font-bold mt-2 uppercase tracking-tighter ${isMe ? 'text-right' : 'text-left'} text-gray-400`}>
                                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
+                                </div>
                             </div>
                         </div>
                     );
@@ -223,41 +208,39 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div className="p-4 bg-white border-t border-gray-200">
-                <form onSubmit={handleSend} className="flex gap-2">
+            {/* Input Bar */}
+            <div className="p-5 bg-white border-t-4 border-gray-900 shadow-[0_-4px_0_rgba(0,0,0,0.05)]">
+                <form onSubmit={handleSend} className="flex gap-3">
                     <input
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Type a message..."
-                        className="flex-grow px-4 py-2 rounded-full border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="TYPE MESSAGE..."
+                        className="flex-grow h-12 px-4 bg-white border-2 border-gray-900 shadow-[inset_2px_2px_0_rgba(0,0,0,0.1)] outline-none font-bold text-sm focus:bg-gray-50 transition-colors placeholder:text-gray-300"
                     />
                     <button
                         type="submit"
                         disabled={!newMessage.trim()}
-                        className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="w-12 h-12 flex items-center justify-center bg-gray-900 text-white border-2 border-gray-900 shadow-[4px_4px_0_#000] hover:bg-gray-800 active:translate-y-[2px] active:shadow-none disabled:opacity-30 disabled:translate-y-0 transition-all"
                     >
-                        <Send size={20} />
+                        <Send size={18} strokeWidth={3} />
                     </button>
                 </form>
             </div>
 
             {/* Modals */}
             {isPostFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-xl w-full max-w-2xl m-4 max-h-[90vh] overflow-y-auto">
-                        <PostForm onClose={() => setIsPostFormOpen(false)} />
-                    </div>
-                </div>
+                <Modal isOpen={isPostFormOpen} onClose={() => setIsPostFormOpen(false)} title="Share Experience">
+                    <PostForm onClose={() => setIsPostFormOpen(false)} />
+                </Modal>
             )}
 
             <JobDetailModal 
                 job={selectedJob} 
                 isOpen={isJobModalOpen} 
                 onClose={() => setIsJobModalOpen(false)}
-                onApply={() => {}} // Already applied if viewing from chat usually
+                onApply={() => {}}
             />
-        </div >
+        </div>
     );
 }

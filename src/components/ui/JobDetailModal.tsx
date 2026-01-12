@@ -92,7 +92,7 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
 
     const handleApplyClick = () => {
         if (!job) return;
-        if (window.confirm(`「${job.title}」に応募しますか？`)) {
+        else {
             onApply(job.id);
         }
     };

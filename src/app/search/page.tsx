@@ -5,27 +5,27 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
 import PostForm from '@/components/ui/PostForm';
 import Modal from '@/components/ui/Modal';
-import JobBoard from '@/components/ui/JobBoard'; 
+import JobBoard from '@/components/ui/JobBoard';
 import { Search as SearchIcon, Filter, MapPin, Briefcase } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 
 const industries = [
-  "農業", "林業", "漁業", 
-  "職人・工芸", "建築・DIY", 
-  "飲食・料理", "宿泊・観光", 
-  "教育・福祉", "IT・Web", 
-  "アート・デザイン", "その他"
+    "農業", "林業", "漁業",
+    "職人・工芸", "建築・DIY",
+    "飲食・料理", "宿泊・観光",
+    "教育・福祉", "IT・Web",
+    "アート・デザイン", "その他"
 ];
 
 const areaToPrefecture: { [key: string]: string[] } = {
-  "北海道": ["北海道"],
-  "東北": ["青森県","岩手県","宮城県","秋田県","山形県","福島県"],
-  "関東": ["茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県"],
-  "中部": ["新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県"],
-  "近畿": ["三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県"],
-  "中国": ["鳥取県","島根県","岡山県","広島県","山口県"],
-  "四国": ["徳島県","香川県","愛媛県","高知県"],
-  "九州": ["福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"],
+    "北海道": ["北海道"],
+    "東北": ["青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"],
+    "関東": ["茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県"],
+    "中部": ["新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県"],
+    "近畿": ["三重県", "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県"],
+    "中国": ["鳥取県", "島根県", "岡山県", "広島県", "山口県"],
+    "四国": ["徳島県", "香川県", "愛媛県", "高知県"],
+    "九州": ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"],
 };
 
 export default function SearchPage() {
@@ -43,7 +43,7 @@ export default function SearchPage() {
     const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
     const [selectedPrefectures, setSelectedPrefectures] = useState<string[]>([]);
     const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
-    
+
     const toggleSelection = (list: string[], setter: (v: string[]) => void, value: string) => {
         if (list.includes(value)) setter(list.filter((v) => v !== value));
         else setter([...list, value]);
@@ -72,8 +72,8 @@ export default function SearchPage() {
                 onClick={() => toggleSelection(selectedList, setter, label)}
                 className={`
                     px-3 py-1.5 border-2 text-sm transition-all m-1 whitespace-nowrap font-bold tracking-tight relative
-                    ${selected 
-                        ? "bg-gray-900 text-white border-gray-900 shadow-[inset_2px_2px_0px_rgba(255,255,255,0.2)] translate-y-[2px]" 
+                    ${selected
+                        ? "bg-gray-900 text-white border-gray-900 shadow-[inset_2px_2px_0px_rgba(255,255,255,0.2)] translate-y-[2px]"
                         : "bg-white text-gray-900 border-gray-900 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.1),inset_2px_2px_0px_#ffffff,2px_2px_0px_#000] hover:bg-gray-100 active:shadow-none active:translate-y-[2px]"
                     }
                 `}
@@ -86,30 +86,30 @@ export default function SearchPage() {
 
     return (
         <main className="flex w-full h-screen bg-gray-100 overflow-hidden flex-col md:flex-row font-pixel text-gray-900 select-none">
-            
+
             <div className="flex-shrink-0 z-20">
                 <Sidebar onPostClick={() => setIsPostFormOpen(true)} />
             </div>
 
             <div className="flex-grow relative z-0 overflow-y-auto pb-20 md:pb-0 bg-gray-100/50">
                 <div className="max-w-6xl mx-auto p-6 md:p-8">
-                    
+
                     <div className="mb-8 flex items-center gap-4 border-b-2 border-gray-900 pb-4 bg-transparent">
                         <div className="bg-gray-900 p-2 border-2 border-gray-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.1)]">
                             <SearchIcon className="text-white" size={28} strokeWidth={2.5} />
                         </div>
                         <div>
                             <h1 className="text-3xl font-black text-gray-900 tracking-tighter drop-shadow-[2px_2px_0px_#fff]">
-                                村を探索
+                                体験をさがす
                             </h1>
                             <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">
-                                Explore Village / Search
+                                Experience Search
                             </p>
                         </div>
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-4 mb-8 relative z-10">
-                         <div className="relative flex-grow group">
+                        <div className="relative flex-grow group">
                             <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
                                 <SearchIcon size={18} />
                             </div>
@@ -121,13 +121,13 @@ export default function SearchPage() {
                                 className="w-full h-[54px] p-3 pl-10 bg-white text-gray-900 border-2 border-gray-900 shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)] outline-none font-bold text-base placeholder:text-gray-400 focus:bg-green-50/50 transition-colors"
                             />
                         </div>
-                        
+
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`
                                 h-[54px] px-6 border-2 border-gray-900 font-bold transition-all flex items-center gap-2 text-sm shrink-0 justify-center
-                                ${showFilters 
-                                    ? "bg-gray-900 text-white shadow-[inset_3px_3px_0px_rgba(50,50,50,1)] translate-y-[2px]" 
+                                ${showFilters
+                                    ? "bg-gray-900 text-white shadow-[inset_3px_3px_0px_rgba(50,50,50,1)] translate-y-[2px]"
                                     : "bg-white text-gray-900 shadow-[inset_-3px_-3px_0px_rgba(0,0,0,0.1),inset_3px_3px_0px_#fff,3px_3px_0px_#000] hover:bg-gray-50 active:shadow-none active:translate-y-[3px]"
                                 }
                             `}
@@ -182,7 +182,7 @@ export default function SearchPage() {
                                     </div>
 
                                     <div className="text-center pt-2">
-                                        <button 
+                                        <button
                                             onClick={() => setShowFilters(false)}
                                             className="text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
                                         >
@@ -195,8 +195,8 @@ export default function SearchPage() {
                     )}
 
                     <div className="mb-8">
-                        <JobBoard 
-                            searchQuery={keyword} 
+                        <JobBoard
+                            searchQuery={keyword}
                             filterLocation={targetLocation}
                             filterIndustries={selectedIndustries}
                         />
