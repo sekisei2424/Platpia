@@ -56,7 +56,12 @@ export default function MessagesLayout({
     return (
         <div className="flex h-screen flex-col md:flex-row font-pixel">
             {/* Main Sidebar (Navigation) */}
-            <div className={`flex-shrink-0 z-20 ${isConversationOpen ? 'hidden md:block' : 'block'}`}>
+            <div className={`flex-shrink-0 z-20 hidden md:block`}>
+                <Sidebar onPostClick={() => { }} />
+            </div>
+
+            {/* Mobile Bottom Navigation (Only visible on mobile) */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-30">
                 <Sidebar onPostClick={() => { }} />
             </div>
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabaseService } from '@/services/supabaseService';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/lib/supabase/client';
-import { Send, User } from 'lucide-react';
+import { Send, User, ChevronLeft } from 'lucide-react';
 import PostForm from '@/components/ui/PostForm';
 import JobDetailModal from '@/components/ui/JobDetailModal';
 import Modal from '@/components/ui/Modal';
@@ -155,38 +155,48 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     return (
         <div className="flex flex-col h-full bg-white border-l-4 border-gray-900 font-pixel">
             {/* Header */}
-            <div className="bg-white border-b-4 border-gray-900 p-5 flex items-center justify-between shadow-[0_4px_0_rgba(0,0,0,0.05)] shrink-0 z-10">
-                {otherUser ? (
-                    <div 
-                        className="flex items-center gap-3 cursor-pointer group" 
-                        onClick={() => router.push(`/profile/${otherUser.id}`)}
+            <div className="bg-white border-b-4 border-gray-900 p-4 flex items-center justify-between shadow-[0_4px_0_rgba(0,0,0,0.05)] shrink-0 z-10 sticky top-0">
+                <div className="flex items-center gap-3">
+                    {/* Back Button for Mobile */}
+                    <button 
+                        onClick={() => router.push('/messages')}
+                        className="md:hidden p-2 -ml-2 text-gray-900 hover:bg-gray-100 rounded-full"
                     >
-                        <div className="w-10 h-10 border-2 border-gray-900 rounded-full overflow-hidden shadow-[2px_2px_0px_#000] relative bg-white">
-                            {otherUser.avatar_type ? (
-                                <img src={`/images/${otherUser.avatar_type.replace('/images/', '')}`} alt={otherUser.username} className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                                    <User size={20} />
-                                </div>
-                            )}
+                        <ChevronLeft size={24} />
+                    </button>
+                    
+                    {otherUser ? (
+                        <div 
+                            className="flex items-center gap-3 cursor-pointer group" 
+                            onClick={() => router.push(`/profile/${otherUser.id}`)}
+                        >
+                            <div className="w-10 h-10 border-2 border-gray-900 rounded-full overflow-hidden shadow-[2px_2px_0px_#000] relative bg-white">
+                                {otherUser.avatar_type ? (
+                                    <img src={`/images/${otherUser.avatar_type.replace('/images/', '')}`} alt={otherUser.username} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                        <User size={20} />
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-black uppercase tracking-tighter group-hover:underline decoration-2 underline-offset-2">
+                                    {otherUser.username}
+                                </h2>
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                    {otherUser.user_type === 'company' ? 'CORPORATE' : 'RESIDENT'}
+                                </span>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-lg font-black uppercase tracking-tighter group-hover:underline decoration-2 underline-offset-2">
-                                {otherUser.username}
-                            </h2>
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                {otherUser.user_type === 'company' ? 'CORPORATE' : 'RESIDENT'}
-                            </span>
+                    ) : (
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 border-2 border-gray-900 flex items-center justify-center bg-gray-50 shadow-[2px_2px_0px_#000]">
+                                <User size={20} />
+                            </div>
+                            <h2 className="text-xl font-black uppercase tracking-tighter">Conversation</h2>
                         </div>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 border-2 border-gray-900 flex items-center justify-center bg-gray-50 shadow-[2px_2px_0px_#000]">
-                            <User size={20} />
-                        </div>
-                        <h2 className="text-xl font-black uppercase tracking-tighter">Conversation</h2>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* Messages Scroll Area */}

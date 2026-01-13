@@ -64,15 +64,6 @@ export default function UserProfilePage() {
         const postsData = await supabaseService.fetchUserPosts(userId);
         setPosts(postsData);
 
-        if (profileData?.user_type === "company") {
-          const jobsData = await supabaseService.fetchCompanyJobs(userId);
-          setCompanyJobs(jobsData);
-        } else {
-          // Fetch completed jobs for memories
-          const completed = await supabaseService.fetchCompletedApplications(userId);
-          setMemories(completed);
-        }
-
       } catch (error) {
         console.error("Error loading profile:", error);
       } finally {
