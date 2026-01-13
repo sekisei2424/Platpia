@@ -65,7 +65,7 @@ export default function MessagesLayout({
     };
 
     return (
-        <div className="flex h-screen flex-col md:flex-row font-pixel">
+        <div className="flex h-[100dvh] flex-col md:flex-row font-pixel overflow-hidden">
             {/* Main Sidebar (Navigation) */}
             <div className={`flex-shrink-0 z-20 hidden md:block`}>
                 <Sidebar onPostClick={() => { }} />
@@ -80,8 +80,9 @@ export default function MessagesLayout({
             <div className={`
                 w-full md:w-80 bg-white border-r border-gray-200 flex-col h-full
                 ${isConversationOpen ? 'hidden md:flex' : 'flex'}
+                pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0
             `}>
-                <div className="p-4 border-b border-gray-200 bg-gray-50">
+                <div className="p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
                     <h1 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Messages</h1>
                 </div>
 
@@ -144,7 +145,7 @@ export default function MessagesLayout({
             <div className={`
                 flex-grow bg-gray-50 overflow-hidden relative
                 ${!isConversationOpen ? 'hidden md:block' : 'block h-full'}
-                pb-16 md:pb-0 
+                pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 
             `}>
                 {children}
             </div>
