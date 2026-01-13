@@ -5,6 +5,12 @@ import { Database } from "@/types/database";
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type Job = Database['public']['Tables']['jobs']['Row'];
 export type JobApplication = Database['public']['Tables']['job_applications']['Row'];
+export type JobApplicationWithJob = JobApplication & {
+  jobs: {
+    title: string;
+    status: string;
+  } | null;
+};
 export type Post = Database['public']['Tables']['plaza_posts']['Row'] & {
   profiles?: {
     username: string | null;
@@ -188,7 +194,7 @@ export const supabaseService = {
   },
 
   // Fetch unposted completed jobs for a user
-  async fetchUnpostedCompletedJobs(userId: string): Promise<JobApplication[]> {
+  async fetchUnpostedCompletedJobs(userId: string): Promise<JobApplicationWithJob[]> {
     // Get all completed applications
     const { data: completedApps, error } = await supabase
       .from("job_applications")
@@ -219,7 +225,7 @@ export const supabaseService = {
     // Filter out already posted jobs
     return completedApps.filter(
       (app) => !postedJobIds.includes(app.job_id)
-    ) as JobApplication[];
+    ) as JobApplicationWithJob[];
   },
 
   // Check if user has applied for a job
