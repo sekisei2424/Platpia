@@ -219,12 +219,12 @@ export default function UserProfilePage() {
                 </div>
               ) : (
                 <div>
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <h1 className="text-5xl font-black uppercase tracking-tighter mb-2 text-gray-900">
+                  <div className="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-6">
+                    <div className="min-w-0">
+                      <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 text-gray-900 break-words md:whitespace-nowrap overflow-hidden text-ellipsis">
                         {profile.username}
                       </h1>
-                      <span className="px-3 py-1 text-xs font-bold border-2 border-gray-900 bg-gray-100 uppercase tracking-widest text-gray-900">
+                      <span className="px-3 py-1 text-xs font-bold border-2 border-gray-900 bg-gray-100 uppercase tracking-widest text-gray-900 inline-block">
                         {profile.user_type === "company"
                           ? "CORPORATE"
                           : "RESIDENT"}
@@ -233,20 +233,20 @@ export default function UserProfilePage() {
                     {isOwnProfile ? (
                       <button
                         onClick={() => setIsProfileEditing(true)}
-                        className="px-4 py-2 border-2 border-gray-900 text-xs font-bold uppercase hover:bg-gray-900 hover:text-white transition-colors text-gray-900"
+                        className="self-start px-4 py-2 border-2 border-gray-900 text-xs font-bold uppercase hover:bg-gray-900 hover:text-white transition-colors text-gray-900 shrink-0"
                       >
                         Edit Profile
                       </button>
                     ) : (
                       <button
                         onClick={handleMessage}
-                        className="px-6 py-3 bg-gray-900 text-white font-bold border-2 border-gray-900 shadow-[4px_4px_0px_0px_#000] flex items-center gap-2 active:translate-y-[2px] active:shadow-none transition-all"
+                        className="self-start px-6 py-3 bg-gray-900 text-white font-bold border-2 border-gray-900 shadow-[4px_4px_0px_0px_#000] flex items-center gap-2 active:translate-y-[2px] active:shadow-none transition-all shrink-0"
                       >
                         <MessageCircle size={18} /> MESSAGE
                       </button>
                     )}
                   </div>
-                  <p className="text-lg leading-relaxed border-l-8 border-gray-900 pl-6 py-2 bg-gray-50 whitespace-pre-wrap text-gray-700">
+                  <p className="text-sm md:text-lg leading-relaxed border-l-8 border-gray-900 pl-6 py-2 bg-gray-50 whitespace-pre-wrap text-gray-700">
                     {profile.bio || "No introduction provided."}
                   </p>
                 </div>
@@ -502,6 +502,7 @@ function JobsList({ userId }: { userId: string }) {
     const [loading, setLoading] = useState(true);
     const [selectedJob, setSelectedJob] = useState<any>(null);
     const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+    const { user } = useAuth(); // Add useAuth to check current user
 
     useEffect(() => {
         const fetch = async () => {
@@ -511,6 +512,8 @@ function JobsList({ userId }: { userId: string }) {
         };
         fetch();
     }, [userId]);
+
+    const isOwnProfile = user?.id === userId; // Check if it's correct user
 
     const handleDelete = async (e: React.MouseEvent, jobId: string) => {
         e.stopPropagation();
@@ -536,12 +539,14 @@ function JobsList({ userId }: { userId: string }) {
                         <span className={`text-[10px] font-black px-2 py-1 uppercase border-2 border-gray-900 ${job.status === 'open' ? 'bg-green-400 text-gray-900' : 'bg-gray-200 text-gray-500'}`}>
                             {job.status}
                         </span>
-                        <button 
-                            onClick={(e) => handleDelete(e, job.id)}
-                            className="bg-white text-red-500 border-2 border-gray-900 p-1 hover:bg-red-500 hover:text-white transition-colors"
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
+                        {isOwnProfile && ( // Only show delete button for owner
+                            <button 
+                                onClick={(e) => handleDelete(e, job.id)}
+                                className="bg-white text-red-500 border-2 border-gray-900 p-1 hover:bg-red-500 hover:text-white transition-colors"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        )}
                     </div>
                     <h3 className="font-black text-lg mb-2 uppercase">{job.title}</h3>
                     <p className="text-sm font-bold text-gray-500 mb-4 line-clamp-2">{job.description}</p>
