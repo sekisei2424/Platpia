@@ -134,18 +134,18 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
                         </span>
                     </div>
 
-                    {job.thumbnail_url && (
-                        <div className="w-full aspect-video border-4 border-gray-900 overflow-hidden shadow-[4px_4px_0px_0px_#cbd5e1] mb-2 bg-gray-100">
-                             <img 
-                                src={job.thumbnail_url} 
-                                alt={job.title} 
-                                className="w-full h-full object-cover"
-                             />
-                        </div>
-                    )}
-
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 bg-gray-50 p-4 rounded-lg border-2 border-gray-200 shadow-sm">
+                            {job.thumbnail_url && (
+                                <div className="w-full h-32 md:h-48 border-4 border-gray-900 overflow-hidden shadow-[4px_4px_0px_0px_#cbd5e1] mb-6 bg-gray-100 shrink-0">
+                                     <img 
+                                        src={job.thumbnail_url} 
+                                        alt={job.title} 
+                                        className="w-full h-full object-cover"
+                                     />
+                                </div>
+                            )}
+                            
                             <div 
                                 className="flex items-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity"
                                 onClick={() => {
