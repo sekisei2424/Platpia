@@ -6,6 +6,7 @@ import AuthModal from '@/components/auth/AuthModal';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabaseService } from '@/services/supabaseService';
 import { supabase } from '@/lib/supabase/client';
+import { messageEvents } from '@/lib/events';
 
 interface SidebarProps {
     onPostClick: () => void;
@@ -28,8 +29,10 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
             fetchUnreadCount();
             checkPostEligibility();
             const unsubscribe = subscribeToUnread();
+            const removeListener = messageEvents.on('update', fetchUnreadCount);
             return () => {
                 unsubscribe();
+                removeListener();
             };
         } else {
             setUnreadCount(0);
@@ -52,6 +55,8 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
         // Listen for new messages to increment count
         // Ideally we should filter by "not sent by me" but RLS might handle visibility
         // For simplicity, we'll just re-fetch count on any message insert that we can see
+        if (!user) return () => {};
+
         const channel = supabase
             .channel('global_messages')
             .on(
@@ -63,6 +68,18 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
                 },
                 () => {
                     // Re-fetch count to be accurate
+                    fetchUnreadCount();
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'conversation_participants',
+                    filter: `user_id=eq.${user.id}`
+                },
+                () => {
                     fetchUnreadCount();
                 }
             )

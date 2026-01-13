@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Send, Image as ImageIcon, LogIn, Briefcase, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { supabaseService, JobApplication } from '@/services/supabaseService';
+import { supabaseService, JobApplication, JobApplicationWithJob } from '@/services/supabaseService';
 import AuthModal from '@/components/auth/AuthModal';
 
 interface PostFormProps {
@@ -15,7 +15,7 @@ export default function PostForm({ onClose }: PostFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
     const [showAuthModal, setShowAuthModal] = useState(false);
-    const [jobs, setJobs] = useState<JobApplication[]>([]);
+    const [jobs, setJobs] = useState<JobApplicationWithJob[]>([]);
     const [companyJobs, setCompanyJobs] = useState<any[]>([]); // For companies to select their own jobs
     const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
     

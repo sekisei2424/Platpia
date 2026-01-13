@@ -1,34 +1,41 @@
 import { supabase } from "@/lib/supabase/client";
+import { messageEvents } from "@/lib/events";
 import { Database } from "@/types/database";
 
-export type Post = Database["public"]["Tables"]["plaza_posts"]["Row"] & {
-  profiles: {
+export type Profile = Database['public']['Tables']['profiles']['Row'];
+export type Job = Database['public']['Tables']['jobs']['Row'];
+export type JobApplication = Database['public']['Tables']['job_applications']['Row'];
+export type JobApplicationWithJob = JobApplication & {
+  jobs: {
+    title: string;
+    status: string;
+  } | null;
+};
+export type Post = Database['public']['Tables']['plaza_posts']['Row'] & {
+  profiles?: {
     username: string | null;
     avatar_type: string | null;
-    user_type: "individual" | "company" | null;
+    user_type: "individual" | "company";
   } | null;
-  jobs: {
+  jobs?: {
     title: string;
   } | null;
 };
 
-export type JobApplication =
-  Database["public"]["Tables"]["job_applications"]["Row"] & {
-    jobs: {
-      title: string;
-      status: "open" | "closed" | "draft";
-    } | null;
-  };
+export interface Memory {
+    id: string;
+    date: string;
+    job_title: string;
+    partner_id: string;
+    partner_username: string;
+    partner_avatar_type: string;
+}
 
-// --- Added Memory Type ---
-export type Memory = {
-  id: string;
-  date: string; // completed_at from job_applications
-  job_title: string; // title from jobs
-  partner_id: string; // company_id from jobs
-  partner_avatar_type: string; // avatar_type from profiles (partner)
-  partner_username: string; // username from profiles (partner)
-};
+export type JobStatus = Database['public']['Tables']['jobs']['Row']['status'];
+export type ApplicationStatus = Database['public']['Tables']['job_applications']['Row']['status'];
+
+
+// ...existing code...
 
 export const supabaseService = {
   // Fetch latest posts per user to avoid duplicate avatars in Plaza
@@ -187,7 +194,7 @@ export const supabaseService = {
   },
 
   // Fetch unposted completed jobs for a user
-  async fetchUnpostedCompletedJobs(userId: string): Promise<JobApplication[]> {
+  async fetchUnpostedCompletedJobs(userId: string): Promise<JobApplicationWithJob[]> {
     // Get all completed applications
     const { data: completedApps, error } = await supabase
       .from("job_applications")
@@ -218,7 +225,7 @@ export const supabaseService = {
     // Filter out already posted jobs
     return completedApps.filter(
       (app) => !postedJobIds.includes(app.job_id)
-    ) as JobApplication[];
+    ) as JobApplicationWithJob[];
   },
 
   // Check if user has applied for a job
@@ -399,7 +406,7 @@ export const supabaseService = {
     // to find conversations where the user is a participant,
     // and then fetch the other participant's profile.
 
-    // 1. Get conversation IDs for the user
+    // 1. Get conversation ID's for the user
     const { data: myConvos, error: myConvosError } = await supabase
       .from("conversation_participants")
       .select("conversation_id")
@@ -433,6 +440,12 @@ export const supabaseService = {
 
     if (participantsError) return [];
 
+    // Helper map
+    const participantsMap = new Map();
+    participants.forEach((p: any) => {
+        participantsMap.set(p.conversation_id, p.profiles);
+    });
+
     // 3. Fetch latest messages for these conversations
     // We can do this by fetching messages ordered by created_at desc
     // Ideally we'd use a view or a lateral join, but let's do a simple query for now.
@@ -461,8 +474,12 @@ export const supabaseService = {
       const myPart = myParticipation?.find(
         (mp) => mp.conversation_id === p.conversation_id
       );
+      
+      // If the last message is sent by ME, it shouldn't be unread status for ME, no matter what valid logic says.
+      const isMyMessage = lastMsg?.sender_id === userId;
+      
       const isUnread =
-        lastMsg && myPart
+        lastMsg && myPart && !isMyMessage
           ? new Date(lastMsg.created_at) > new Date(myPart.last_read_at)
           : false;
 
@@ -506,6 +523,11 @@ export const supabaseService = {
       .select();
 
     if (error) throw error;
+    
+    // Optimistically/Explicitly update last_read_at for the sender to avoid self-unread ghosting
+    // (though 'mark_conversation_as_read' usually does this, we do it implicitly here for robustness)
+    await this.markAsRead(conversationId);
+
     return data?.[0];
   },
 
@@ -522,7 +544,12 @@ export const supabaseService = {
     const { error } = await supabase.rpc("mark_conversation_as_read" as any, {
       p_conversation_id: conversationId,
     });
-    if (error) console.error("Error marking as read:", error);
+    if (error) {
+        console.error("Error marking as read:", error);
+    } else {
+        // Notify UI components to refresh
+        messageEvents.emit('update');
+    }
   },
 
   async createConversation(userId: string, otherUserId: string) {
@@ -666,6 +693,28 @@ export const supabaseService = {
     return !bookmarked;
   },
 
+  async deletePost(postId: string) {
+    const { error } = await supabase
+      .from("plaza_posts")
+      .delete()
+      .eq("id", postId);
+
+    if (error) throw error;
+    return true;
+  },
+
+  async deleteJob(jobId: string) {
+    const { error } = await supabase
+      .from("jobs")
+      .delete()
+      .eq("id", jobId);
+
+    if (error) throw error;
+    return true;
+  },
+
+
+
   async fetchUserPosts(userId: string): Promise<Post[]> {
     const { data, error } = await supabase
       .from("plaza_posts")
@@ -762,5 +811,45 @@ export const supabaseService = {
       partner_username: item.jobs?.profiles?.username || "不明なユーザー",
       partner_avatar_type: item.jobs?.profiles?.avatar_type || "default",
     }));
+  },
+
+  async fetchConversationDetails(conversationId: string, currentUserId: string) {
+    // Get the other participant
+    const { data: participants, error } = await supabase
+      .from('conversation_participants')
+      .select(`
+        profiles (
+          id,
+          username,
+          avatar_type,
+          user_type
+        )
+      `)
+      .eq('conversation_id', conversationId)
+      .neq('user_id', currentUserId)
+      .single();
+    
+    if (error) return null;
+    return participants.profiles;
+  },
+
+  async fetchCompletedApplications(userId: string) {
+    const { data, error } = await supabase
+      .from('job_applications')
+      .select(`
+          *,
+          jobs (
+              *
+          )
+      `)
+      .eq('applicant_id', userId)
+      .eq('status', 'completed')
+      .order('updated_at', { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching completed apps:", error);
+      return [];
+    }
+    return data;
   },
 };
