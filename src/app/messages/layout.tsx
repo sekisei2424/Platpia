@@ -145,7 +145,6 @@ export default function MessagesLayout({
             <div className={`
                 flex-grow bg-gray-50 overflow-hidden relative
                 ${!isConversationOpen ? 'hidden md:block' : 'block h-full'}
-                pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 
             `}>
                 {children}
             </div>

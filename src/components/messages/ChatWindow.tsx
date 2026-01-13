@@ -257,7 +257,7 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
             </div>
 
             {/* Input Bar */}
-            <div className="p-5 bg-white border-t-4 border-gray-900 shadow-[0_-4px_0_rgba(0,0,0,0.05)]">
+            <div className="p-5 bg-white border-t-4 border-gray-900 shadow-[0_-4px_0_rgba(0,0,0,0.05)] pb-[calc(1.25rem+4rem+env(safe-area-inset-bottom))] md:pb-5">
                 <form onSubmit={handleSend} className="flex gap-3">
                     <input
                         type="text"
