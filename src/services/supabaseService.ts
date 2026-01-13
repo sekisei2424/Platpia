@@ -2,10 +2,10 @@ import { supabase } from "@/lib/supabase/client";
 import { messageEvents } from "@/lib/events";
 import { Database } from "@/types/database";
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
-type Job = Database['public']['Tables']['jobs']['Row'];
-type JobApplication = Database['public']['Tables']['job_applications']['Row'];
-type Post = Database['public']['Tables']['plaza_posts']['Row'] & {
+export type Profile = Database['public']['Tables']['profiles']['Row'];
+export type Job = Database['public']['Tables']['jobs']['Row'];
+export type JobApplication = Database['public']['Tables']['job_applications']['Row'];
+export type Post = Database['public']['Tables']['plaza_posts']['Row'] & {
   profiles?: {
     username: string | null;
     avatar_type: string | null;
