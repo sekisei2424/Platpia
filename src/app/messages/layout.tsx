@@ -34,7 +34,18 @@ export default function MessagesLayout({
                     'postgres_changes',
                     { event: 'INSERT', schema: 'public', table: 'messages' },
                     () => {
-                        // Debounce or just reload? Reload is safer for list consistency
+                        loadConversations();
+                    }
+                )
+                .on(
+                    'postgres_changes',
+                    { 
+                        event: 'UPDATE', 
+                        schema: 'public', 
+                        table: 'conversation_participants',
+                        filter: `user_id=eq.${user.id}`
+                    },
+                    () => {
                         loadConversations();
                     }
                 )
@@ -133,6 +144,7 @@ export default function MessagesLayout({
             <div className={`
                 flex-grow bg-gray-50 overflow-hidden relative
                 ${!isConversationOpen ? 'hidden md:block' : 'block h-full'}
+                pb-16 md:pb-0 
             `}>
                 {children}
             </div>
