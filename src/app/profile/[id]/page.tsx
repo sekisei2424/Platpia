@@ -14,6 +14,7 @@ import {
   Calendar,
   User,
   Briefcase,
+  Palette,
 } from "lucide-react";
 import PostDetailModal from "@/components/ui/PostDetailModal";
 import Modal from "@/components/ui/Modal";
@@ -181,6 +182,28 @@ export default function UserProfilePage() {
         <div className="flex-1 flex flex-col overflow-hidden bg-white">
           <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10">
             <div className="mb-10">
+              {/* Mobile Avatar Display */}
+              <div className="md:hidden flex items-center gap-4 mb-6">
+                 <div className="relative">
+                    <div className="w-24 h-24 border-4 border-gray-900 bg-white shadow-[4px_4px_0_#000] overflow-hidden">
+                        <img 
+                            src={getAvatarUrl(profile.avatar_type)} 
+                            alt={profile.username}
+                            className="w-full h-full object-cover object-top"
+                        />
+                    </div>
+                 </div>
+                 {isOwnProfile && (
+                     <button 
+                        onClick={() => setIsAvatarEditing(true)}
+                        className="flex items-center gap-2 px-4 py-2 border-2 border-gray-900 bg-yellow-400 font-bold text-xs uppercase shadow-[2px_2px_0_#000] active:translate-y-[1px] active:shadow-none"
+                     >
+                        <Palette size={16} />
+                        Customize
+                     </button>
+                 )}
+              </div>
+
               {isProfileEditing ? (
                 <div className="bg-white border-4 border-gray-900 p-6 shadow-[8px_8px_0px_0px_#000] space-y-4">
                   <h2 className="text-xl font-black uppercase mb-4 text-gray-900">
