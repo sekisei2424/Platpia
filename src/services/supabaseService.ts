@@ -433,6 +433,12 @@ export const supabaseService = {
 
     if (participantsError) return [];
 
+    // Helper map
+    const participantsMap = new Map();
+    participants.forEach((p: any) => {
+        participantsMap.set(p.conversation_id, p.profiles);
+    });
+
     // 3. Fetch latest messages for these conversations
     // We can do this by fetching messages ordered by created_at desc
     // Ideally we'd use a view or a lateral join, but let's do a simple query for now.
@@ -666,6 +672,28 @@ export const supabaseService = {
     return !bookmarked;
   },
 
+  async deletePost(postId: string) {
+    const { error } = await supabase
+      .from("plaza_posts")
+      .delete()
+      .eq("id", postId);
+
+    if (error) throw error;
+    return true;
+  },
+
+  async deleteJob(jobId: string) {
+    const { error } = await supabase
+      .from("jobs")
+      .delete()
+      .eq("id", jobId);
+
+    if (error) throw error;
+    return true;
+  },
+
+
+
   async fetchUserPosts(userId: string): Promise<Post[]> {
     const { data, error } = await supabase
       .from("plaza_posts")
@@ -762,5 +790,45 @@ export const supabaseService = {
       partner_username: item.jobs?.profiles?.username || "不明なユーザー",
       partner_avatar_type: item.jobs?.profiles?.avatar_type || "default",
     }));
+  },
+
+  async fetchConversationDetails(conversationId: string, currentUserId: string) {
+    // Get the other participant
+    const { data: participants, error } = await supabase
+      .from('conversation_participants')
+      .select(`
+        profiles (
+          id,
+          username,
+          avatar_type,
+          user_type
+        )
+      `)
+      .eq('conversation_id', conversationId)
+      .neq('user_id', currentUserId)
+      .single();
+    
+    if (error) return null;
+    return participants.profiles;
+  },
+
+  async fetchCompletedApplications(userId: string) {
+    const { data, error } = await supabase
+      .from('job_applications')
+      .select(`
+          *,
+          jobs (
+              *
+          )
+      `)
+      .eq('applicant_id', userId)
+      .eq('status', 'completed')
+      .order('updated_at', { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching completed apps:", error);
+      return [];
+    }
+    return data;
   },
 };

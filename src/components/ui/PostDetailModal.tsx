@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, MessageCircle, Briefcase, ChevronLeft, ChevronRight, Heart, Bookmark } from 'lucide-react';
+import { X, MessageCircle, Briefcase, ChevronLeft, ChevronRight, Heart, Bookmark, Trash2 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabaseService } from '@/services/supabaseService';
 import { useRouter } from 'next/navigation';
@@ -20,6 +20,17 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
     const router = useRouter();
     const [selectedJob, setSelectedJob] = useState<any>(null);
     const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+
+    const handleDelete = async () => {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+        try {
+            await supabaseService.deletePost(post.id);
+            onClose();
+            window.location.reload(); // Simple reload for now
+        } catch (error) {
+            alert('Failed to delete post');
+        }
+    };
 
     const handleMessage = async () => {
         if (!user) {
@@ -217,7 +228,7 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                         </h2>
                         
                         <div className="flex gap-2 mt-2 md:mt-4">
-                            {(!user || user.id !== post.user_id) && (
+                            {(!user || user.id !== post.id) && (
                                 <button 
                                     onClick={handleMessage}
                                     className="p-3 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all shadow-[2px_2px_0px_0px_#000] active:translate-y-[2px] active:shadow-none"
@@ -242,6 +253,15 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                     <div className="flex-1 flex flex-col relative bg-white min-h-0">
                         {/* Header Bar - Desktop Only */}
                         <div className="hidden md:flex h-14 border-b-4 border-gray-900 items-center justify-end px-4 bg-gray-50 shrink-0 gap-4">
+                            {user && user.id === post.user_id && (
+                                <button 
+                                    onClick={handleDelete}
+                                    className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                                    title="Delete Post"
+                                >
+                                    <Trash2 size={20} />
+                                </button>
+                            )}
                             <LikeButton post={post} />
                             <BookmarkButton post={post} />
                             <div className="w-px h-6 bg-gray-300 mx-2"></div>
@@ -259,10 +279,18 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                                 {new Date(post.created_at || Date.now()).toLocaleDateString()}
                             </div>
                             
-                            {/* Mobile Like/Bookmark Actions (Inserted here for mobile view) */}
+                            {/* Mobile Like/Bookmark Actions */}
                             <div className="md:hidden flex items-center justify-center gap-8 mb-4 border-t-2 border-b-2 border-gray-100 py-2">
                                 <LikeButton post={post} />
                                 <BookmarkButton post={post} />
+                                {user && user.id === post.user_id && (
+                                    <button 
+                                        onClick={handleDelete}
+                                        className="text-red-500 p-2"
+                                    >
+                                        <Trash2 size={24} />
+                                    </button>
+                                )}
                             </div>
 
                             <p className="text-base md:text-lg text-gray-800 leading-relaxed font-medium whitespace-pre-wrap mb-4 md:mb-8">

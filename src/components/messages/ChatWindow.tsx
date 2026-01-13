@@ -33,6 +33,7 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     const [feedbackJobId, setFeedbackJobId] = useState<string | null>(null);
     const [selectedJob, setSelectedJob] = useState<any>(null);
     const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+    const [otherUser, setOtherUser] = useState<any>(null);
 
     useEffect(() => {
         loadMessages();
@@ -40,6 +41,11 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
         const unsubscribe = subscribeToMessages();
         return () => unsubscribe();
     }, [conversationId]);
+
+    useEffect(() => {
+        if (!user) return;
+        loadConversationDetails();
+    }, [conversationId, user]);
 
     const markAsRead = async () => {
         await supabaseService.markAsRead(conversationId);
@@ -52,6 +58,12 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     const loadMessages = async () => {
         const data = await supabaseService.fetchMessages(conversationId);
         setMessages(data as Message[]);
+    };
+
+    const loadConversationDetails = async () => {
+        if (!user) return;
+        const details = await supabaseService.fetchConversationDetails(conversationId, user.id);
+        setOtherUser(details);
     };
 
     const subscribeToMessages = () => {
@@ -143,13 +155,38 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     return (
         <div className="flex flex-col h-full bg-white border-l-4 border-gray-900 font-pixel">
             {/* Header */}
-            <div className="bg-white border-b-4 border-gray-900 p-5 flex items-center justify-between shadow-[0_4px_0_rgba(0,0,0,0.05)]">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 border-2 border-gray-900 flex items-center justify-center bg-gray-50 shadow-[2px_2px_0px_#000]">
-                        <User size={20} />
+            <div className="bg-white border-b-4 border-gray-900 p-5 flex items-center justify-between shadow-[0_4px_0_rgba(0,0,0,0.05)] shrink-0 z-10">
+                {otherUser ? (
+                    <div 
+                        className="flex items-center gap-3 cursor-pointer group" 
+                        onClick={() => router.push(`/profile/${otherUser.id}`)}
+                    >
+                        <div className="w-10 h-10 border-2 border-gray-900 rounded-full overflow-hidden shadow-[2px_2px_0px_#000] relative bg-white">
+                            {otherUser.avatar_type ? (
+                                <img src={`/images/${otherUser.avatar_type.replace('/images/', '')}`} alt={otherUser.username} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                    <User size={20} />
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-black uppercase tracking-tighter group-hover:underline decoration-2 underline-offset-2">
+                                {otherUser.username}
+                            </h2>
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                {otherUser.user_type === 'company' ? 'CORPORATE' : 'RESIDENT'}
+                            </span>
+                        </div>
                     </div>
-                    <h2 className="text-xl font-black uppercase tracking-tighter">Conversation</h2>
-                </div>
+                ) : (
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 border-2 border-gray-900 flex items-center justify-center bg-gray-50 shadow-[2px_2px_0px_#000]">
+                            <User size={20} />
+                        </div>
+                        <h2 className="text-xl font-black uppercase tracking-tighter">Conversation</h2>
+                    </div>
+                )}
             </div>
 
             {/* Messages Scroll Area */}

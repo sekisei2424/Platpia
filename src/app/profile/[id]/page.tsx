@@ -29,7 +29,7 @@ export default function UserProfilePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "posts" | "bookmarks" | "memories"
+    "posts" | "bookmarks" | "memories" | "jobs"
   >("posts");
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
@@ -63,6 +63,16 @@ export default function UserProfilePage() {
 
         const postsData = await supabaseService.fetchUserPosts(userId);
         setPosts(postsData);
+
+        if (profileData?.user_type === "company") {
+          const jobsData = await supabaseService.fetchCompanyJobs(userId);
+          setCompanyJobs(jobsData);
+        } else {
+          // Fetch completed jobs for memories
+          const completed = await supabaseService.fetchCompletedApplications(userId);
+          setMemories(completed);
+        }
+
       } catch (error) {
         console.error("Error loading profile:", error);
       } finally {
@@ -254,22 +264,51 @@ export default function UserProfilePage() {
 
             {/* Tabs */}
             <div className="flex border-b-4 border-gray-900 mb-10 overflow-x-auto scrollbar-hide">
-              {["posts", "bookmarks", "memories"].map(
-                (tab) =>
-                  (tab === "posts" || isOwnProfile) && (
+              {profile.user_type === 'company' ? (
+                 <>
                     <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab as any)}
+                      onClick={() => setActiveTab('posts')}
                       className={`flex-1 min-w-[120px] py-4 font-black uppercase text-sm transition-all border-r-2 border-gray-100
-                                            ${
-                                              activeTab === tab
-                                                ? "bg-gray-900 text-white"
-                                                : "text-gray-400 hover:bg-gray-50"
-                                            }`}
+                        ${activeTab === 'posts' ? "bg-gray-900 text-white" : "text-gray-400 hover:bg-gray-50"}`}
                     >
-                      {tab}
+                      POSTS
                     </button>
-                  )
+                    <button
+                      onClick={() => setActiveTab('jobs')}
+                      className={`flex-1 min-w-[120px] py-4 font-black uppercase text-sm transition-all border-r-2 border-gray-100
+                        ${activeTab === 'jobs' ? "bg-gray-900 text-white" : "text-gray-400 hover:bg-gray-50"}`}
+                    >
+                      JOBS
+                    </button>
+                 </>
+              ) : (
+                <>
+                    <button
+                      onClick={() => setActiveTab('posts')}
+                      className={`flex-1 min-w-[120px] py-4 font-black uppercase text-sm transition-all border-r-2 border-gray-100
+                        ${activeTab === 'posts' ? "bg-gray-900 text-white" : "text-gray-400 hover:bg-gray-50"}`}
+                    >
+                      POSTS
+                    </button>
+                    {isOwnProfile && (
+                        <button
+                          onClick={() => setActiveTab('bookmarks')}
+                          className={`flex-1 min-w-[120px] py-4 font-black uppercase text-sm transition-all border-r-2 border-gray-100
+                            ${activeTab === 'bookmarks' ? "bg-gray-900 text-white" : "text-gray-400 hover:bg-gray-50"}`}
+                        >
+                          BOOKMARKS
+                        </button>
+                    )}
+                    {(isOwnProfile || activeTab === 'memories') && (
+                        <button
+                          onClick={() => setActiveTab('memories')}
+                          className={`flex-1 min-w-[120px] py-4 font-black uppercase text-sm transition-all border-r-2 border-gray-100
+                            ${activeTab === 'memories' ? "bg-gray-900 text-white" : "text-gray-400 hover:bg-gray-50"}`}
+                        >
+                          MEMORIES
+                        </button>
+                    )}
+                </>
               )}
             </div>
 
@@ -281,14 +320,22 @@ export default function UserProfilePage() {
                     <div
                       key={post.id}
                       onClick={() => setSelectedPost(post)}
-                      className="bg-white border-4 border-gray-900 p-6 shadow-[6px_6px_0px_0px_#000] cursor-pointer hover:-translate-y-1 transition-all"
+                      className="bg-white border-4 border-gray-900 p-4 shadow-[6px_6px_0px_0px_#000] cursor-pointer hover:-translate-y-1 transition-all flex flex-col h-full"
                     >
-                      <div className="text-[10px] font-bold text-gray-400 mb-2">
-                        {new Date(post.created_at).toLocaleDateString()}
+                      {post.image_url && (
+                          <div className="w-full h-40 bg-gray-100 border-2 border-gray-900 mb-3 overflow-hidden relative shrink-0 group">
+                                <div className="absolute inset-0 pattern-dots opacity-10"></div>
+                                <img src={post.image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Post Thumbnail" />
+                          </div>
+                      )}
+                      <div className="flex-grow flex flex-col">
+                          <div className="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest">
+                            {new Date(post.created_at).toLocaleDateString()}
+                          </div>
+                          <p className="font-bold text-sm line-clamp-3 text-gray-900 leading-relaxed">
+                            {post.content}
+                          </p>
                       </div>
-                      <p className="font-bold text-sm line-clamp-3 text-gray-800">
-                        {post.content}
-                      </p>
                     </div>
                   ))}
                   {posts.length === 0 && (
@@ -304,6 +351,8 @@ export default function UserProfilePage() {
               )}
 
               {activeTab === "memories" && <MemoriesList userId={userId} />}
+
+              {activeTab === "jobs" && <JobsList userId={userId} />}
             </div>
           </div>
         </div>
@@ -333,8 +382,8 @@ function MemoriesList({ userId }: { userId: string }) {
   useEffect(() => {
     const fetchMemories = async () => {
       try {
-        const data = (await supabaseService.fetchUserMemories?.(userId)) || [];
-        setMemories(data);
+        const data = await supabaseService.fetchCompletedApplications(userId);
+        setMemories(data || []);
       } catch (e) {
         console.error(e);
       } finally {
@@ -353,36 +402,45 @@ function MemoriesList({ userId }: { userId: string }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-      {memories.map((memory, index) => (
+      {memories.map((app, index) => (
         <div
-          key={memory.id}
+          key={app.id}
           className={`bg-white border-4 border-gray-900 p-4 shadow-[8px_8px_0px_0px_#000] transition-all hover:rotate-0
                     ${index % 2 === 0 ? "-rotate-2" : "rotate-2"}`}
         >
           <div className="w-full aspect-square bg-gray-100 border-2 border-gray-900 mb-4 overflow-hidden relative group">
-            <img
-              src={getAvatarUrl(memory.partner_avatar_type)}
-              className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-              alt="Partner"
-            />
-            <div className="absolute bottom-2 right-2 bg-yellow-400 border-2 border-gray-900 p-1">
-              <User size={14} strokeWidth={3} />
+             {/* Thumbnail: Job Image -> Job Placeholder -> Avatar (fallback) */}
+            {app.jobs?.thumbnail_url ? (
+                 <img
+                    src={app.jobs.thumbnail_url}
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                    alt="Job Memory"
+                 />
+            ) : (
+                <div className="w-full h-full flex items-center justify-center bg-yellow-50 text-yellow-500 font-black text-4xl uppercase tracking-tighter opacity-50 relative overflow-hidden">
+                    <div className="absolute inset-0 pattern-dots opacity-20"></div>
+                    JOB
+                </div>
+            )}
+            
+            <div className="absolute bottom-2 right-2 bg-yellow-400 border-2 border-gray-900 p-1 shadow-[2px_2px_0px_#000]">
+              <Briefcase size={14} strokeWidth={3} className="text-gray-900" />
             </div>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest bg-gray-50 p-1">
               <Calendar size={12} />
-              {new Date(memory.date).toLocaleDateString()}
+              {new Date(app.updated_at).toLocaleDateString()}
             </div>
-            <h3 className="font-black text-sm leading-tight uppercase min-h-[3em] text-gray-900">
-              {memory.job_title}
+            <h3 className="font-black text-sm leading-tight uppercase min-h-[3em] text-gray-900 line-clamp-2">
+              {app.jobs?.title || 'Unknown Job'}
             </h3>
             <div className="pt-2 border-t-2 border-gray-100 flex items-center justify-between">
               <span className="text-[10px] font-bold text-gray-400 uppercase">
-                ID: {memory.partner_id?.substring(0, 8)}
+                COMPLETE
               </span>
-              <Briefcase size={14} className="text-gray-300" />
+              <div className="w-2 h-2 bg-green-500 rounded-full border border-gray-900"></div>
             </div>
           </div>
         </div>
@@ -391,7 +449,7 @@ function MemoriesList({ userId }: { userId: string }) {
       {memories.length === 0 && (
         <div className="col-span-full border-4 border-dashed border-gray-200 py-20 text-center">
           <p className="text-gray-400 font-black italic uppercase tracking-widest">
-            No Memories Yet
+            No Completed Jobs Yet
           </p>
         </div>
       )}
@@ -444,12 +502,64 @@ function BookmarksList({ userId }: { userId: string }) {
           No Bookmarks
         </div>
       )}
-      {selectedPost && (
-        <PostDetailModal
-          post={selectedPost}
-          onClose={() => setSelectedPost(null)}
-        />
-      )}
     </div>
   );
+}
+
+function JobsList({ userId }: { userId: string }) {
+    const [jobs, setJobs] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedJob, setSelectedJob] = useState<any>(null);
+    const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+
+    useEffect(() => {
+        const fetch = async () => {
+            const data = await supabaseService.fetchCompanyJobs(userId);
+            setJobs(data || []);
+            setLoading(false);
+        };
+        fetch();
+    }, [userId]);
+
+    const handleDelete = async (e: React.MouseEvent, jobId: string) => {
+        e.stopPropagation();
+        if (!confirm('Are you sure you want to delete this job?')) return;
+        try {
+            await supabaseService.deleteJob(jobId);
+            setJobs(prev => prev.filter(j => j.id !== jobId));
+        } catch (error) {
+            alert('Failed to delete job');
+        }
+    };
+
+    if (loading) return <div>Loading...</div>;
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {jobs.map(job => (
+                <div 
+                    key={job.id} 
+                    className="bg-white border-4 border-gray-900 p-6 shadow-[6px_6px_0px_0px_#000] relative group hover:-translate-y-1 transition-all"
+                >
+                    <div className="absolute top-4 right-4 flex gap-2">
+                        <span className={`text-[10px] font-black px-2 py-1 uppercase border-2 border-gray-900 ${job.status === 'open' ? 'bg-green-400 text-gray-900' : 'bg-gray-200 text-gray-500'}`}>
+                            {job.status}
+                        </span>
+                        <button 
+                            onClick={(e) => handleDelete(e, job.id)}
+                            className="bg-white text-red-500 border-2 border-gray-900 p-1 hover:bg-red-500 hover:text-white transition-colors"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                    <h3 className="font-black text-lg mb-2 uppercase">{job.title}</h3>
+                    <p className="text-sm font-bold text-gray-500 mb-4 line-clamp-2">{job.description}</p>
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400">
+                        <Briefcase size={14} />
+                        <span>{job.reward}</span>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
 }

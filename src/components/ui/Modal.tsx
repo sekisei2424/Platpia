@@ -22,18 +22,18 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
             onMouseDown={(e) => e.stopPropagation()}
         >
             <div 
-                className={`bg-[#FDFBF7] w-full ${maxWidth} rounded-xl shadow-2xl overflow-hidden transition-all duration-300`}
+                className={`bg-[#FDFBF7] w-full ${maxWidth} rounded-xl shadow-2xl overflow-hidden transition-all duration-300 flex flex-col max-h-[90vh]`}
                 onClick={e => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
             >
-                <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white/50">
+                <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white/50 shrink-0">
                     <h2 className="text-xl font-bold text-gray-800">{title}</h2>
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors p-1 hover:bg-gray-100 rounded-full">
                         <X size={24} />
                     </button>
                 </div>
-                <div className="p-4 text-gray-800">
+                <div className="p-4 text-gray-800 overflow-y-auto custom-scrollbar">
                     {children}
                 </div>
             </div>
