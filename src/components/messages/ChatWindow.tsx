@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabaseService } from '@/services/supabaseService';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/lib/supabase/client';
+import { getAvatarUrl } from '@/lib/avatar';
 import { Send, User, ChevronLeft } from 'lucide-react';
 import PostForm from '@/components/ui/PostForm';
 import JobDetailModal from '@/components/ui/JobDetailModal';
@@ -172,7 +173,7 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                         >
                             <div className="w-10 h-10 border-2 border-gray-900 rounded-full overflow-hidden shadow-[2px_2px_0px_#000] relative bg-white">
                                 {otherUser.avatar_type ? (
-                                    <img src={`/images/${otherUser.avatar_type.replace('/images/', '')}`} alt={otherUser.username} className="w-full h-full object-cover" />
+                                    <img src={getAvatarUrl(otherUser.avatar_type)} alt={otherUser.username} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
                                         <User size={20} />

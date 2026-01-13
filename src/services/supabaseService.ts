@@ -399,7 +399,7 @@ export const supabaseService = {
     // to find conversations where the user is a participant,
     // and then fetch the other participant's profile.
 
-    // 1. Get conversation IDs for the user
+    // 1. Get conversation ID's for the user
     const { data: myConvos, error: myConvosError } = await supabase
       .from("conversation_participants")
       .select("conversation_id")
@@ -467,8 +467,12 @@ export const supabaseService = {
       const myPart = myParticipation?.find(
         (mp) => mp.conversation_id === p.conversation_id
       );
+      
+      // If the last message is sent by ME, it shouldn't be unread status for ME, no matter what valid logic says.
+      const isMyMessage = lastMsg?.sender_id === userId;
+      
       const isUnread =
-        lastMsg && myPart
+        lastMsg && myPart && !isMyMessage
           ? new Date(lastMsg.created_at) > new Date(myPart.last_read_at)
           : false;
 
@@ -512,6 +516,11 @@ export const supabaseService = {
       .select();
 
     if (error) throw error;
+    
+    // Optimistically/Explicitly update last_read_at for the sender to avoid self-unread ghosting
+    // (though 'mark_conversation_as_read' usually does this, we do it implicitly here for robustness)
+    await this.markAsRead(conversationId);
+
     return data?.[0];
   },
 
