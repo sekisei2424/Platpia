@@ -172,8 +172,15 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                             onPrev(); 
                         }}
                         onMouseDown={(e) => e.stopPropagation()}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        className="pointer-events-auto absolute left-2 lg:-left-14 top-1/2 -translate-y-1/2 z-[60] p-3 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_#000] hover:bg-gray-100 active:shadow-none transition-all rounded-lg flex items-center justify-center w-12 h-12 md:w-auto md:h-auto"
+                        onPointerDown={(e) => {
+                             e.stopPropagation();
+                             e.preventDefault(); // Add preventDefault
+                        }}
+                        onTouchStart={(e) => {
+                             e.stopPropagation();
+                             // e.preventDefault(); // Sometimes prevents click, be careful. Usually separation is enough for game canvases.
+                        }}
+                        className="pointer-events-auto absolute left-2 lg:-left-14 top-1/2 -translate-y-1/2 z-[60] p-3 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_#000] hover:bg-gray-100 active:shadow-none transition-all rounded-lg flex items-center justify-center w-12 h-12 md:w-auto md:h-auto select-none"
                         aria-label="Previous"
                     >
                         <ChevronLeft size={24} strokeWidth={3} className="text-gray-900 md:w-8 md:h-8" />
@@ -188,6 +195,7 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                     {/* Close Button (Mobile Only: Absolute Top-Right) */}
                     <button 
                         onClick={onClose}
+                        onPointerDown={(e) => e.stopPropagation()}
                         className="md:hidden absolute top-2 right-2 z-[70] p-2 bg-white border-2 border-gray-900 shadow-[2px_2px_0px_0px_#000] active:translate-y-0.5 active:shadow-none text-gray-900"
                         aria-label="Close"
                     >
@@ -318,8 +326,14 @@ export default function PostDetailModal({ post, onClose, onNext, onPrev }: PostD
                             onNext(); 
                         }}
                         onMouseDown={(e) => e.stopPropagation()}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        className="pointer-events-auto absolute right-2 lg:-right-14 top-1/2 -translate-y-1/2 z-[60] p-3 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_#000] hover:bg-gray-100 active:shadow-none transition-all rounded-lg flex items-center justify-center w-12 h-12 md:w-auto md:h-auto"
+                        onPointerDown={(e) => {
+                             e.stopPropagation();
+                             e.preventDefault();
+                        }}
+                         onTouchStart={(e) => {
+                             e.stopPropagation();
+                        }}
+                        className="pointer-events-auto absolute right-2 lg:-right-14 top-1/2 -translate-y-1/2 z-[60] p-3 bg-white border-4 border-gray-900 shadow-[4px_4px_0px_0px_#000] hover:bg-gray-100 active:shadow-none transition-all rounded-lg flex items-center justify-center w-12 h-12 md:w-auto md:h-auto select-none"
                         aria-label="Next"
                     >
                         <ChevronRight size={24} strokeWidth={3} className="text-gray-900 md:w-8 md:h-8" />
