@@ -180,9 +180,10 @@ export default function UserProfilePage() {
 
         {/* Right Side: Profile Info, Tabs, Content */}
         <div className="flex-1 flex flex-col overflow-hidden bg-white">
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10">
-            <div className="mb-10">
-              {/* Mobile Avatar Display */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="p-6 md:p-10 pb-0">
+              <div className="mb-10">
+                {/* Mobile Avatar Display */}
               <div className="md:hidden flex items-center gap-4 mb-6">
                  <div className="relative">
                     <div className="w-24 h-24 border-4 border-gray-900 bg-white shadow-[4px_4px_0_#000] overflow-hidden">
@@ -275,9 +276,11 @@ export default function UserProfilePage() {
                 </div>
               )}
             </div>
+            </div>
 
             {/* Tabs */}
-            <div className="flex border-b-4 border-gray-900 mb-10 overflow-x-auto scrollbar-hide">
+            <div className="sticky top-0 z-20 bg-white px-6 md:px-10 pt-6">
+                <div className="flex border-b-4 border-gray-900 mb-6 overflow-x-auto scrollbar-hide bg-white">
               {profile.user_type === 'company' ? (
                  <>
                     <button
@@ -325,9 +328,10 @@ export default function UserProfilePage() {
                 </>
               )}
             </div>
+            </div>
 
             {/* Content Area */}
-            <div className="pb-20">
+            <div className="p-6 md:p-10 pt-4 pb-20">
               {activeTab === "posts" && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {posts.map((post) => (
