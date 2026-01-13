@@ -17,6 +17,7 @@ import {
   Palette,
 } from "lucide-react";
 import PostDetailModal from "@/components/ui/PostDetailModal";
+import JobDetailModal from "@/components/ui/JobDetailModal";
 import Modal from "@/components/ui/Modal";
 import AvatarBuilder from "@/components/avatar/AvatarBuilder";
 
@@ -553,36 +554,70 @@ function JobsList({ userId }: { userId: string }) {
         }
     };
 
+    const handleApply = async (jobId: string) => {
+        if (!user) return;
+        try {
+            await supabaseService.applyForJob(jobId, user.id);
+            alert('応募しました！');
+            setIsJobModalOpen(false);
+        } catch (error: any) {
+            alert(error.message || '応募に失敗しました');
+        }
+    };
+
     if (loading) return <div>Loading...</div>;
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {jobs.map(job => (
-                <div 
-                    key={job.id} 
-                    className="bg-white border-4 border-gray-900 p-6 shadow-[6px_6px_0px_0px_#000] relative group hover:-translate-y-1 transition-all"
-                >
-                    <div className="absolute top-4 right-4 flex gap-2">
-                        <span className={`text-[10px] font-black px-2 py-1 uppercase border-2 border-gray-900 ${job.status === 'open' ? 'bg-green-400 text-gray-900' : 'bg-gray-200 text-gray-500'}`}>
-                            {job.status}
-                        </span>
-                        {isOwnProfile && ( // Only show delete button for owner
-                            <button 
-                                onClick={(e) => handleDelete(e, job.id)}
-                                className="bg-white text-red-500 border-2 border-gray-900 p-1 hover:bg-red-500 hover:text-white transition-colors"
-                            >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                            </button>
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {jobs.map(job => (
+                    <div 
+                        key={job.id} 
+                        className="bg-white border-4 border-gray-900 p-6 shadow-[6px_6px_0px_0px_#000] relative group hover:-translate-y-1 transition-all cursor-pointer flex flex-col"
+                        onClick={() => {
+                            setSelectedJob(job);
+                            setIsJobModalOpen(true);
+                        }}
+                    >
+                        {job.thumbnail_url && (
+                             <div className="w-full h-32 border-2 border-gray-900 overflow-hidden mb-4 shrink-0 bg-gray-100 relative group-hover:opacity-90 transition-opacity">
+                                 <img 
+                                    src={job.thumbnail_url} 
+                                    alt={job.title} 
+                                    className="w-full h-full object-cover"
+                                 />
+                            </div>
                         )}
+
+                        <div className="absolute top-4 right-4 flex gap-2 z-10">
+                            <span className={`text-[10px] font-black px-2 py-1 uppercase border-2 border-gray-900 ${job.status === 'open' ? 'bg-green-400 text-gray-900' : 'bg-gray-200 text-gray-500'}`}>
+                                {job.status}
+                            </span>
+                            {isOwnProfile && ( // Only show delete button for owner
+                                <button 
+                                    onClick={(e) => handleDelete(e, job.id)}
+                                    className="bg-white text-red-500 border-2 border-gray-900 p-1 hover:bg-red-500 hover:text-white transition-colors"
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            )}
+                        </div>
+                        <h3 className="font-black text-lg mb-2 uppercase break-words pr-16">{job.title}</h3>
+                        <p className="text-sm font-bold text-gray-500 mb-4 line-clamp-2 h-10">{job.description}</p>
+                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 mt-auto pt-2 border-t-2 border-gray-100">
+                            <Briefcase size={14} />
+                            <span className="truncate">{job.reward}</span>
+                        </div>
                     </div>
-                    <h3 className="font-black text-lg mb-2 uppercase">{job.title}</h3>
-                    <p className="text-sm font-bold text-gray-500 mb-4 line-clamp-2">{job.description}</p>
-                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400">
-                        <Briefcase size={14} />
-                        <span>{job.reward}</span>
-                    </div>
-                </div>
-            ))}
-        </div>
+                ))}
+            </div>
+
+            <JobDetailModal
+                job={selectedJob}
+                isOpen={isJobModalOpen}
+                onClose={() => setIsJobModalOpen(false)}
+                onApply={handleApply}
+            />
+        </>
     );
 }
