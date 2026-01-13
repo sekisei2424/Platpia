@@ -125,7 +125,7 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
                             {job.title}
                         </h2>
                         <span className={`
-                            inline-block text-xs px-3 py-1 font-black rounded-full shrink-0 ml-4
+                            inline-block text-xs px-3 py-1 font-black rounded-full shrink-0
                             ${job.status === 'open' 
                                 ? 'bg-red-600 text-white shadow-[2px_2px_0px_0px_#000]' 
                                 : 'bg-gray-300 text-gray-600'}
@@ -133,6 +133,16 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
                             {job.status === 'open' ? '募集中' : '募集終了'}
                         </span>
                     </div>
+
+                    {job.thumbnail_url && (
+                        <div className="w-full aspect-video border-4 border-gray-900 overflow-hidden shadow-[4px_4px_0px_0px_#cbd5e1] mb-2 bg-gray-100">
+                             <img 
+                                src={job.thumbnail_url} 
+                                alt={job.title} 
+                                className="w-full h-full object-cover"
+                             />
+                        </div>
+                    )}
 
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 bg-gray-50 p-4 rounded-lg border-2 border-gray-200 shadow-sm">
@@ -190,7 +200,7 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
                                         <Gift size={16} className="text-gray-600" strokeWidth={2.5} />
                                         <span className="text-[10px] font-black text-gray-400">報酬・特典</span>
                                     </div>
-                                    <span className="text-sm font-bold text-gray-800 block pl-5 truncate">{job.reward || '要確認'}</span>
+                                    <span className="text-sm font-bold text-gray-800 block pl-5 break-words whitespace-pre-wrap">{job.reward || '要確認'}</span>
                                 </div>
                             </div>
 
