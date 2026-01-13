@@ -140,7 +140,7 @@ export default function UserProfilePage() {
         {/* Left Side: Avatar Display & Customization */}
         <div
           className={`
-                    w-full md:w-2/5 md:p-8 bg-gray-100 md:border-r-4 border-gray-900 md:overflow-y-auto overflow-hidden flex-col gap-6 md:justify-center
+                    w-full md:w-2/5 md:p-8 bg-gray-100 md:border-r-4 border-gray-900 md:overflow-y-auto overflow-y-auto flex-col gap-6 md:justify-center
                     ${
                       isAvatarEditing
                         ? "flex fixed inset-0 z-[60] pt-20 md:static md:flex md:pt-8"
