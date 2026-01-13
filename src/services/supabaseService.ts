@@ -1,34 +1,35 @@
 import { supabase } from "@/lib/supabase/client";
+import { messageEvents } from "@/lib/events";
 import { Database } from "@/types/database";
 
-export type Post = Database["public"]["Tables"]["plaza_posts"]["Row"] & {
-  profiles: {
+type Profile = Database['public']['Tables']['profiles']['Row'];
+type Job = Database['public']['Tables']['jobs']['Row'];
+type JobApplication = Database['public']['Tables']['job_applications']['Row'];
+type Post = Database['public']['Tables']['plaza_posts']['Row'] & {
+  profiles?: {
     username: string | null;
     avatar_type: string | null;
-    user_type: "individual" | "company" | null;
+    user_type: "individual" | "company";
   } | null;
-  jobs: {
+  jobs?: {
     title: string;
   } | null;
 };
 
-export type JobApplication =
-  Database["public"]["Tables"]["job_applications"]["Row"] & {
-    jobs: {
-      title: string;
-      status: "open" | "closed" | "draft";
-    } | null;
-  };
+export interface Memory {
+    id: string;
+    date: string;
+    job_title: string;
+    partner_id: string;
+    partner_username: string;
+    partner_avatar_type: string;
+}
 
-// --- Added Memory Type ---
-export type Memory = {
-  id: string;
-  date: string; // completed_at from job_applications
-  job_title: string; // title from jobs
-  partner_id: string; // company_id from jobs
-  partner_avatar_type: string; // avatar_type from profiles (partner)
-  partner_username: string; // username from profiles (partner)
-};
+export type JobStatus = Database['public']['Tables']['jobs']['Row']['status'];
+export type ApplicationStatus = Database['public']['Tables']['job_applications']['Row']['status'];
+
+
+// ...existing code...
 
 export const supabaseService = {
   // Fetch latest posts per user to avoid duplicate avatars in Plaza
@@ -537,7 +538,12 @@ export const supabaseService = {
     const { error } = await supabase.rpc("mark_conversation_as_read" as any, {
       p_conversation_id: conversationId,
     });
-    if (error) console.error("Error marking as read:", error);
+    if (error) {
+        console.error("Error marking as read:", error);
+    } else {
+        // Notify UI components to refresh
+        messageEvents.emit('update');
+    }
   },
 
   async createConversation(userId: string, otherUserId: string) {

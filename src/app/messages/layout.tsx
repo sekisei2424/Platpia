@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase/client';
 import Sidebar from '@/components/ui/Sidebar';
 import { User } from 'lucide-react';
 import { getAvatarUrl } from '@/lib/avatar';
+import { messageEvents } from '@/lib/events';
 
 export default function MessagesLayout({
     children,
@@ -51,8 +52,11 @@ export default function MessagesLayout({
                 )
                 .subscribe();
 
+            const removeListener = messageEvents.on('update', loadConversations);
+
             return () => {
                 supabase.removeChannel(channel);
+                removeListener();
             };
         }
     }, [user]);

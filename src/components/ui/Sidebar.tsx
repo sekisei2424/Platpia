@@ -6,6 +6,7 @@ import AuthModal from '@/components/auth/AuthModal';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabaseService } from '@/services/supabaseService';
 import { supabase } from '@/lib/supabase/client';
+import { messageEvents } from '@/lib/events';
 
 interface SidebarProps {
     onPostClick: () => void;
@@ -28,8 +29,10 @@ export default function Sidebar({ onPostClick }: SidebarProps) {
             fetchUnreadCount();
             checkPostEligibility();
             const unsubscribe = subscribeToUnread();
+            const removeListener = messageEvents.on('update', fetchUnreadCount);
             return () => {
                 unsubscribe();
+                removeListener();
             };
         } else {
             setUnreadCount(0);
